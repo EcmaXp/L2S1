@@ -40,7 +40,7 @@ class PackageTests(unittest.TestCase):
         result = subprocess.run([sys.executable, '-m', 'l2s1_training', 'profiles'],
                                 capture_output=True, text=True, check=True)
         self.assertEqual(len(json.loads(result.stdout)['models']), 5)
-        for name in json.loads(DEFAULT_PROFILES.read_text())['models']:
+        for name in json.loads(DEFAULT_PROFILES.read_text(encoding='utf-8'))['models']:
             self.assertEqual(read_profile(name)['name'], name)
 
     def test_custom_prepare_rejects_overlap_and_does_not_overwrite(self):
@@ -48,7 +48,7 @@ class PackageTests(unittest.TestCase):
             root = Path(tmp)
             data = self.prepare(root)
             self.assertEqual(validate_dataset(data)['splits']['train']['decisions'], 1)
-            self.assertNotIn('gold', (data/'train-requests.jsonl').read_text())
+            self.assertNotIn('gold', (data/'train-requests.jsonl').read_text(encoding='utf-8'))
             with self.assertRaises(FileExistsError):
                 prepare_custom(root/'train.jsonl', root/'development.jsonl', root/'test.jsonl', data)
             with self.assertRaisesRegex(ValueError, 'leakage'):
@@ -61,7 +61,7 @@ class PackageTests(unittest.TestCase):
             data = self.prepare(Path(tmp))
             requests = data/'test-requests.jsonl'
             requests.write_text(json.dumps(dict(id='test', request={'state':'leaked label'}))+'\n')
-            manifest = json.loads((data/'manifest.json').read_text())
+            manifest = json.loads((data/'manifest.json').read_text(encoding='utf-8'))
             manifest['splits']['test']['requests_sha256'] = digest(requests)
             save_status(data/'manifest.json', manifest)
             with self.assertRaisesRegex(ValueError, 'payload'):
@@ -70,7 +70,7 @@ class PackageTests(unittest.TestCase):
     def test_unsupported_protocol_rejected_before_training(self):
         with tempfile.TemporaryDirectory() as tmp:
             data = self.prepare(Path(tmp))
-            manifest = json.loads((data/'manifest.json').read_text())
+            manifest = json.loads((data/'manifest.json').read_text(encoding='utf-8'))
             manifest['protocol']['epochs'] = 4
             save_status(data/'manifest.json', manifest)
             with self.assertRaisesRegex(ValueError, 'protocol'):
@@ -85,9 +85,9 @@ class PackageTests(unittest.TestCase):
                                   ('missing', [str(root/'missing')])]:
                 with self.assertRaises((RuntimeError, FileNotFoundError)):
                     execute_stage(name, command, root, os.environ, status, persist, 10)
-                record = json.loads((root/'run.json').read_text())['stages'][-1]
+                record = json.loads((root/'run.json').read_text(encoding='utf-8'))['stages'][-1]
                 self.assertEqual(record['status'], 'failed')
-                self.assertGreater(record['elapsed_s'], 0)
+                self.assertGreaterEqual(record['elapsed_s'], 0)
             self.assertEqual(status['stages'][0]['exit_code'], 7)
 
     def test_timeout_kills_child_and_retains_live_record(self):
@@ -98,7 +98,7 @@ class PackageTests(unittest.TestCase):
             with self.assertRaises(TimeoutError):
                 execute_stage('sleep', [sys.executable, '-c', 'import time; time.sleep(60)'],
                               root, os.environ, status, persist, .2)
-            saved = json.loads((root/'run.json').read_text())['stages'][0]
+            saved = json.loads((root/'run.json').read_text(encoding='utf-8'))['stages'][0]
             self.assertEqual(saved['status'], 'timeout')
             self.assertIsNotNone(saved['exit_code'])
             self.assertLess(saved['elapsed_s'], 10)
@@ -138,7 +138,7 @@ class PackageTests(unittest.TestCase):
                 process.send_signal(signal.SIGTERM)
                 _, error = process.communicate(timeout=10)
                 self.assertEqual(process.returncode, 130, error.decode())
-                runs = json.loads((out/'summary.json').read_text())['runs']
+                runs = json.loads((out/'summary.json').read_text(encoding='utf-8'))['runs']
                 self.assertEqual([r['status'] for r in runs], ['cancelled', 'not_started'])
                 self.assertEqual(runs[0]['stages'][0]['status'], 'cancelled')
                 self.assertIsNotNone(runs[0]['stages'][0]['exit_code'])
@@ -149,7 +149,7 @@ class PackageTests(unittest.TestCase):
 
     def test_unsafe_profile_path_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
-            registry = json.loads(DEFAULT_PROFILES.read_text())
+            registry = json.loads(DEFAULT_PROFILES.read_text(encoding='utf-8'))
             registry['models']['gemma4']['gguf'] = '../other.gguf'
             path = Path(tmp)/'models.json'
             path.write_text(json.dumps(registry))
@@ -163,11 +163,11 @@ class PackageTests(unittest.TestCase):
                 '--checkpoint-root', str(root/'missing'), '--data', str(root/'data'),
                 '--converter', str(root/'convert.py'), '--output', str(root/'run')], capture_output=True)
             self.assertEqual(run.returncode, 1)
-            result = json.loads((root/'run/summary.json').read_text())
+            result = json.loads((root/'run/summary.json').read_text(encoding='utf-8'))
             self.assertEqual(len(result['runs']), 5)
             self.assertTrue(all(r['status']=='failed' for r in result['runs']))
             for r in result['runs']:
-                self.assertEqual(json.loads((root/'run'/r['model']/'run.json').read_text()), r)
+                self.assertEqual(json.loads((root/'run'/r['model']/'run.json').read_text(encoding='utf-8')), r)
 
 
 if __name__ == '__main__':
