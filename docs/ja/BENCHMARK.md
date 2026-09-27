@@ -49,6 +49,31 @@ node web/scripts/verify-decision-rules.mjs
 ```
 
 
+<a id="recorded-apple-m5-max-results"></a>
+## macOS / Apple M5 Max の測定結果
+
+**2026-09-27 04:33:25 UTC**(13:33:25 KST)に **Apple M5 Max**(ユニファイドメモリ 128 GB、macOS 27.0)で測定しました。AC 電源接続時の高パフォーマンスモードです。設定は上の Windows 測定と同じです: `legacy`、`fresh`、コンテキスト 2048、バッチ 256、スレッド 4、しきい値 0.8 / 0.05、測定 3 回、ウォームアップ 1 回、タイムアウト 1800 秒。Metal 実行にはこのリポジトリリビジョンの `--device cpu metal` を使用しました。Gemma 4 26B-A4B Q4_K_M はカスタム manifest で 6 番目のチェックポイントとして実行しました。
+
+| Model | Device | Status | Coverage | Accepted accuracy | Correct / all | Raw top-1 | p50 ms/request | p95 ms/request | Decisions/s | Correct accepted/s |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| smollm2 | cpu | ok | 8.3% | 33.3% | 2.8% | 38.9% | 153.3 | 167.7 | 19.58 | 0.54 |
+| smollm2 | metal | ok | 13.9% | 40.0% | 5.6% | 38.9% | 21.8 | 23.2 | 137.29 | 7.63 |
+| qwen3 | cpu | ok | 83.3% | 33.3% | 27.8% | 41.7% | 474.3 | 522.1 | 6.26 | 1.74 |
+| qwen3 | metal | ok | 83.3% | 33.3% | 27.8% | 36.1% | 42.9 | 43.7 | 69.99 | 19.44 |
+| gemma3 | cpu | ok | 91.7% | 54.5% | 50.0% | 50.0% | 610.4 | 679.0 | 4.83 | 2.42 |
+| gemma3 | metal | ok | 88.9% | 53.1% | 47.2% | 50.0% | 55.6 | 60.7 | 52.82 | 24.94 |
+| tinyllama | cpu | ok | 0.0% | n/a | 0.0% | 38.9% | 1399.0 | 1556.7 | 2.13 | 0.00 |
+| tinyllama | metal | ok | 0.0% | n/a | 0.0% | 38.9% | 59.6 | 60.7 | 50.23 | 0.00 |
+| gemma4 | cpu | ok | 94.4% | 100.0% | 94.4% | 97.2% | 1784.4 | 2377.2 | 1.65 | 1.56 |
+| gemma4 | metal | ok | 94.4% | 97.1% | 91.7% | 94.4% | 203.8 | 246.4 | 14.68 | 13.46 |
+| gemma4-26b-a4b | cpu | ok | 100.0% | 100.0% | 100.0% | 100.0% | 5837.7 | 6489.0 | 0.52 | 0.52 |
+| gemma4-26b-a4b | metal | ok | 100.0% | 100.0% | 100.0% | 100.0% | 506.0 | 647.7 | 5.75 | 5.75 |
+
+Gemma 4 26B-A4B は両デバイスのすべての回で 36 件の判断をすべて正解しました(Metal p50 506.0 ms)。Gemma 4 E2B は両デバイスとも各回 36 件中 34 件を採用しました。CPU は 34 件すべて正解、Metal は 33 件正解・1 件誤りです。すべての実行で 72 回の反復比較における変化は 0 回ですが、一部のチェックポイントでは CPU と Metal の間にわずかな差があります。すべての Metal レポートに `backend.offload_device: "Apple M5 Max"` が記録されています。実行ごとのレポートとログはローカルにのみ保管し、公開していません。これは合成 fixture に対する根拠であり、一般的なモデル品質を示すものではありません。
+
+[結果と制約](../../benchmarks/decision-rules-macos-m5max-20260927/README.md)・[要約 JSON](../../benchmarks/decision-rules-macos-m5max-20260927/summary.json)・[出典とハードウェア](../../benchmarks/decision-rules-macos-m5max-20260927/provenance.json)
+
+
 <a id="run-the-five-model-matrix"></a>
 ## 5 つのモデルのマトリックスを実行する
 

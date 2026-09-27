@@ -322,6 +322,7 @@ GPU での画像処理では、`--vision-optimized` により、4 つのデコ�
 | 評価 | 記録された範囲 | レポート |
 | --- | --- | --- |
 | decision-rules-v1 · RTX 5090 / Windows | 5チェックポイント × CPU/CUDA、合成判断36件 × 3回。Gemma4 CUDA: 採用正解率94.3%、全判断に対する採用正解91.7%。CPUタイムアウトも保持 | [結果と条件](docs/ja/BENCHMARK.md#recorded-windows-rtx-5090-results)、[集計検算](benchmarks/decision-rules-windows-20260926/audit.json) |
+| decision-rules-v1 · Apple M5 Max / macOS | 5チェックポイント + Gemma4 26B-A4B × CPU/Metal、合成判断36件 × 3回。Gemma4 26B-A4B: 両デバイスで100%。Gemma4 E2B Metal: 採用正解率97.1%、全判断に対する採用正解91.7% | [結果と条件](docs/ja/BENCHMARK.md#recorded-apple-m5-max-results)、[要約 JSON](benchmarks/decision-rules-macos-m5max-20260927/summary.json) |
 | JevBench 公開サブセット | 元の測定表: 22 チェックポイント × 231 項目、5,082 件の有効な予測 | [モデルの測定結果](docs/ja/MODEL_RESULTS.md)、[手法](docs/ja/JEVBENCH.md) |
 | 意図分類 | 英語 77 ラベル、韓国語 60 ラベル。チェックポイントごとに各言語 200 例 | [意図分類ベンチマーク](docs/ja/INTENT_BENCHMARK.md) |
 | typed-decisions | テスト分割全体: モデルごとに 400 ケース / 2,000 判断。採用ポリシー適用前の正解率は Gemma 4 E2B が 54.30%、Qwen3 0.6B が 31.25%; Gemma4 LoRA 特化実験: raw 正解率 57.85%、カバレッジ 48.35% | [手順と結果](docs/ja/TYPED_DECISIONS_BENCHMARK.md) · [LoRA](benchmarks/jev-lora-20260927/README.md) |

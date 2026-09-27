@@ -50,6 +50,31 @@ node web/scripts/verify-decision-rules.mjs
 ```
 
 
+<a id="recorded-apple-m5-max-results"></a>
+## Recorded macOS / Apple M5 Max results
+
+Recorded at **2026-09-27 04:33:25 UTC** (13:33:25 KST) on an **Apple M5 Max** with 128 GB unified memory, macOS 27.0, in High Power mode on AC power. Settings match the Windows run above: `legacy`, `fresh`, context 2048, batch 256, 4 threads, thresholds 0.8 / 0.05, 3 passes, 1 warmup, timeout 1800 seconds. Metal runs use `--device cpu metal` from this repository revision. Gemma 4 26B-A4B Q4_K_M ran as a sixth checkpoint through a custom manifest.
+
+| Model | Device | Status | Coverage | Accepted accuracy | Correct / all | Raw top-1 | p50 ms/request | p95 ms/request | Decisions/s | Correct accepted/s |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| smollm2 | cpu | ok | 8.3% | 33.3% | 2.8% | 38.9% | 153.3 | 167.7 | 19.58 | 0.54 |
+| smollm2 | metal | ok | 13.9% | 40.0% | 5.6% | 38.9% | 21.8 | 23.2 | 137.29 | 7.63 |
+| qwen3 | cpu | ok | 83.3% | 33.3% | 27.8% | 41.7% | 474.3 | 522.1 | 6.26 | 1.74 |
+| qwen3 | metal | ok | 83.3% | 33.3% | 27.8% | 36.1% | 42.9 | 43.7 | 69.99 | 19.44 |
+| gemma3 | cpu | ok | 91.7% | 54.5% | 50.0% | 50.0% | 610.4 | 679.0 | 4.83 | 2.42 |
+| gemma3 | metal | ok | 88.9% | 53.1% | 47.2% | 50.0% | 55.6 | 60.7 | 52.82 | 24.94 |
+| tinyllama | cpu | ok | 0.0% | n/a | 0.0% | 38.9% | 1399.0 | 1556.7 | 2.13 | 0.00 |
+| tinyllama | metal | ok | 0.0% | n/a | 0.0% | 38.9% | 59.6 | 60.7 | 50.23 | 0.00 |
+| gemma4 | cpu | ok | 94.4% | 100.0% | 94.4% | 97.2% | 1784.4 | 2377.2 | 1.65 | 1.56 |
+| gemma4 | metal | ok | 94.4% | 97.1% | 91.7% | 94.4% | 203.8 | 246.4 | 14.68 | 13.46 |
+| gemma4-26b-a4b | cpu | ok | 100.0% | 100.0% | 100.0% | 100.0% | 5837.7 | 6489.0 | 0.52 | 0.52 |
+| gemma4-26b-a4b | metal | ok | 100.0% | 100.0% | 100.0% | 100.0% | 506.0 | 647.7 | 5.75 | 5.75 |
+
+Gemma 4 26B-A4B answers all 36 decisions correctly in every pass on both devices (Metal p50 506.0 ms). Gemma 4 E2B accepts 34/36 per pass on both devices: CPU gets all 34 correct, Metal 33 correct and 1 wrong. Every run reports 0 changes in 72 repeat comparisons; CPU and Metal still differ slightly for several checkpoints. Every Metal report records `backend.offload_device: "Apple M5 Max"`. Per-run reports and logs are kept locally and not published. This is synthetic fixture evidence, not general model quality.
+
+[Results and limits](../../benchmarks/decision-rules-macos-m5max-20260927/README.md) · [Summary JSON](../../benchmarks/decision-rules-macos-m5max-20260927/summary.json) · [Source and hardware](../../benchmarks/decision-rules-macos-m5max-20260927/provenance.json)
+
+
 <a id="run-the-five-model-matrix"></a>
 ## Run the five-model matrix
 
