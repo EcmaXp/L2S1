@@ -62,7 +62,7 @@ target/release/l2s1-tools benchmark-models \
   --warmup 1
 ```
 
-ランナーは、要求に応じて `--locked --offline` および CUDA 機能を使用して 1 回実行可能なリリース テストをビルドし、各モデルをハッシュし、一度に 1 つのモデル/デバイスを実行します。 CPU がデフォルトのデバイスです。 CUDA は明示的であり、サイレントに CPU にフォールバックすることはできません。 ネイティブ バックエンド は、実行全体で 1 つのロードされたモデルを再利用します。 Rust プロセスの起動、Cargo コンパイル、ロード、およびウォームアップは、定常状態のタイミングから除外されます。
+ランナーは、要求に応じて `--locked --offline` および CUDA 機能を使用して 1 回実行可能なリリース テストをビルドし、各モデルをハッシュし、一度に 1 つのモデル/デバイスを実行します。 CPU がデフォルトのデバイスです。 CUDA は明示的であり、サイレントに CPU にフォールバックすることはできません。 macOS では `--device cpu metal` を指定すると `llama-metal` 機能で 1 回ビルドします。CUDA と Metal を 1 回の実行で併用することはできません。GPU 配置は各 Metal レポートの `backend.offload_device` で確認します。 ネイティブ バックエンド は、実行全体で 1 つのロードされたモデルを再利用します。 Rust プロセスの起動、Cargo コンパイル、ロード、およびウォームアップは、定常状態のタイミングから除外されます。
 
 サブセットを選択するか、設定を変更します。
 
@@ -137,4 +137,4 @@ SKID_BENCH_OUTPUT=results/benchmark/single-model.json \
   native::model_decision_benchmark -- --exact --ignored --nocapture
 ```
 
-直接実行では、`SKID_CONTEXT`、`SKID_BATCH`、`SKID_THREADS`、`SKID_MIN_TOP_PROBABILITY`、および `SKID_MIN_CANDIDATE_MASS` を受け入れます。 Rust ランナーは、チェックポイント ハッシュと比較テーブルを追加します。以前の `tests/performance.rs` は、単一の倉庫の例を繰り返し測定するために引き続き使用できます。
+直接実行では、`SKID_DEVICE`(`cpu`、`cuda`、`metal`。対応する機能でビルドします)、`SKID_CONTEXT`、`SKID_BATCH`、`SKID_THREADS`、`SKID_MIN_TOP_PROBABILITY`、および `SKID_MIN_CANDIDATE_MASS` を受け入れます。 Rust ランナーは、チェックポイント ハッシュと比較テーブルを追加します。以前の `tests/performance.rs` は、単一の倉庫の例を繰り返し測定するために引き続き使用できます。

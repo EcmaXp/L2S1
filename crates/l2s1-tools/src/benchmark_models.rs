@@ -19,7 +19,7 @@ pub struct Args {
     manifest: Option<PathBuf>,
     #[arg(long)]
     model: Vec<String>,
-    #[arg(long, num_args = 1.., value_parser = ["cpu", "cuda"], default_value = "cpu")]
+    #[arg(long, num_args = 1.., value_parser = ["cpu", "cuda", "metal"], default_value = "cpu")]
     device: Vec<String>,
     #[arg(long, default_value = "fresh", value_parser = ["fresh", "prefix-reuse"])]
     execution_mode: String,
@@ -87,8 +87,7 @@ fn read_models(root: &Path, manifest: &Path, selected: &[String]) -> Result<Vec<
     }
 }
 
-fn build(root: &Path, output: &Path, cuda: bool) -> Result<PathBuf> {
-    let feature = if cuda { "llama-cuda" } else { "llama" };
+fn build(root: &Path, output: &Path, feature: &str) -> Result<PathBuf> {
     let result = Command::new("cargo")
         .args([
             "test",
@@ -195,7 +194,7 @@ fn run_test(
         ])
         .current_dir(root)
         .env("SKID_MODEL", model)
-        .env("SKID_CUDA", if device == "cuda" { "1" } else { "0" })
+        .env("SKID_DEVICE", device)
         .env("SKID_BENCH_OUTPUT", report)
         .env("SKID_BENCH_ITERATIONS", args.iterations.to_string())
         .env("SKID_BENCH_WARMUP", args.warmup.to_string())
@@ -250,6 +249,13 @@ pub fn run(root: &Path, args: Args) -> Result<()> {
             bail!("probabilities must be in [0, 1]");
         }
     }
+    let has_device = |name: &str| args.device.iter().any(|device| device == name);
+    let feature = match (has_device("cuda"), has_device("metal")) {
+        (true, true) => bail!("cuda and metal cannot be benchmarked in one run"),
+        (true, false) => "llama-cuda",
+        (false, true) => "llama-metal",
+        (false, false) => "llama",
+    };
     let manifest = args
         .manifest
         .clone()
@@ -287,11 +293,7 @@ pub fn run(root: &Path, args: Args) -> Result<()> {
             "timeout": args.timeout}, "runs": []
     });
     save_summary(&output, &summary)?;
-    let executable = match build(
-        root,
-        &output,
-        args.device.iter().any(|device| device == "cuda"),
-    ) {
+    let executable = match build(root, &output, feature) {
         Ok(path) => path,
         Err(error) => {
             summary["build_error"] = json!(error.to_string());

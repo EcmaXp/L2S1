@@ -63,7 +63,7 @@ target/release/l2s1-tools benchmark-models \
   --warmup 1
 ```
 
-The runner builds a release test executable once with `--locked --offline` and the CUDA feature when requested, hashes each model, and runs one model/device at a time. CPU is the default device. CUDA is explicit and cannot silently fall back to CPU. The native backend reuses one loaded model for the whole run; Rust process startup, Cargo compilation, loading, and warmup are excluded from steady-state timings.
+The runner builds a release test executable once with `--locked --offline` and the CUDA feature when requested, hashes each model, and runs one model/device at a time. CPU is the default device. CUDA is explicit and cannot silently fall back to CPU. On macOS, `--device cpu metal` builds once with the `llama-metal` feature; CUDA and Metal cannot be combined in one run. Check `backend.offload_device` in each Metal report to confirm GPU placement. The native backend reuses one loaded model for the whole run; Rust process startup, Cargo compilation, loading, and warmup are excluded from steady-state timings.
 
 Select a subset or change settings:
 
@@ -138,4 +138,4 @@ SKID_BENCH_OUTPUT=results/benchmark/single-model.json \
   native::model_decision_benchmark -- --exact --ignored --nocapture
 ```
 
-Direct runs accept `SKID_CONTEXT`, `SKID_BATCH`, `SKID_THREADS`, `SKID_MIN_TOP_PROBABILITY`, and `SKID_MIN_CANDIDATE_MASS`. The Rust runner adds checkpoint hashes and the comparison table. The earlier `tests/performance.rs` remains available for repeated measurements of the single warehouse example.
+Direct runs accept `SKID_DEVICE` (`cpu`, `cuda`, or `metal`; build with the matching feature), `SKID_CONTEXT`, `SKID_BATCH`, `SKID_THREADS`, `SKID_MIN_TOP_PROBABILITY`, and `SKID_MIN_CANDIDATE_MASS`. The Rust runner adds checkpoint hashes and the comparison table. The earlier `tests/performance.rs` remains available for repeated measurements of the single warehouse example.
