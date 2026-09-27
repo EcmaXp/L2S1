@@ -326,7 +326,7 @@ GPU 비전 작업에서 `--vision-optimized`를 사용하면 디코더 스트림
 | decision-rules-v1 · RTX 5090 / Windows | 체크포인트 5개 × CPU/CUDA; 합성 판단 36개 × 3회. Gemma4 CUDA: 수락 정답률 94.3%, 전체 대비 정답 91.7%; CPU 시간 초과 포함 | [결과와 조건](docs/ko/BENCHMARK.md#recorded-windows-rtx-5090-results), [집계 검산](benchmarks/decision-rules-windows-20260926/audit.json) |
 | JevBench 공개 부분집합 | 최초 비교: 체크포인트 22개 × 항목 231개; 유효한 예측 5,082개 | [모델 결과](docs/ko/MODEL_RESULTS.md), [측정 방법](docs/ko/JEVBENCH.md) |
 | 의도 분류 | 영어 레이블 77개와 한국어 레이블 60개; 체크포인트마다 언어별 예제 200개 | [의도 분류 벤치마크](docs/ko/INTENT_BENCHMARK.md) |
-| typed-decisions | 전체 테스트: 모델별 400개 사례·2,000개 판단; Gemma 4 E2B 54.30%, Qwen3 0.6B 31.25% 원시 정확도 | [방법과 결과](docs/ko/TYPED_DECISIONS_BENCHMARK.md) |
+| typed-decisions | 전체 테스트: 모델별 400개 사례·2,000개 판단; Gemma 4 E2B 54.30%, Qwen3 0.6B 31.25% 원시 정확도; Gemma4 LoRA 특화 실험: 원시 정확도 57.85%, 수락률 48.35% | [방법과 결과](docs/ko/TYPED_DECISIONS_BENCHMARK.md) · [LoRA](benchmarks/jev-lora-20260927/README.md) |
 | 비전 판단 | 정지 이미지 분류와 실행 모드 비교 | [비전 벤치마크](docs/ko/VISION_BENCHMARK.md), [TrashNet 연구](docs/ko/benchmarks/trashnet-vision-20260925/REPORT.md) |
 
 명시된 리비전, 하드웨어, 설정에서 수행한 로컬 실험 기록입니다. 전체 정확도, 수락한 판단의 정확도, 수락 비율은 따로 확인해야 합니다. 일부 원시 결과는 로컬에만 보관되어 Git에서 제외되어 있으며, 각 보고서에 위치와 재현 절차가 명시되어 있습니다. JevBench 공개 부분집합의 결과는 공식 전체 평가 점수나 순위가 아닙니다.
@@ -345,7 +345,7 @@ MCP에서 문서 조회, 요청 형식 검증, 상주 HTTP 백엔드의 추론�
 | 모델 식별 정보, 사전 검증, 보정, worker 소유권 | [모델 교체와 계약](docs/ko/MODEL_INTERCHANGEABILITY.md) |
 | 모델별 테스트 명령 | [검증 안내](docs/ko/VERIFICATION.md) |
 | 접두사 재사용과 병렬 실행 | [접두사 알고리즘](docs/ko/SEMIF_ALGORITHM.md), [병렬 실행](docs/ko/PARALLEL_EXECUTION.md) |
-| 학습을 통한 특화 | [LoRA 학습](docs/ko/DECISION_FINETUNE.md), [출력 헤드](docs/ko/OUTPUT_HEAD.md) |
+| 학습을 통한 특화 | [LoRA 학습](docs/ko/DECISION_FINETUNE.md), [출력 헤드](docs/ko/OUTPUT_HEAD.md), [Jev 타입 공통 튜닝](docs/JEV_LORA.md) |
 | 데이터 준비와 보고서 도구 | [l2s1-tools](docs/ko/crates/l2s1-tools/README.md) |
 | 모델 비교 기록과 측정 한계 | [모델 결과](docs/ko/MODEL_RESULTS.md) |
 

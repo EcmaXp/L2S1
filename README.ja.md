@@ -324,7 +324,7 @@ GPU での画像処理では、`--vision-optimized` により、4 つのデコ�
 | decision-rules-v1 · RTX 5090 / Windows | 5チェックポイント × CPU/CUDA、合成判断36件 × 3回。Gemma4 CUDA: 採用正解率94.3%、全判断に対する採用正解91.7%。CPUタイムアウトも保持 | [結果と条件](docs/ja/BENCHMARK.md#recorded-windows-rtx-5090-results)、[集計検算](benchmarks/decision-rules-windows-20260926/audit.json) |
 | JevBench 公開サブセット | 元の測定表: 22 チェックポイント × 231 項目、5,082 件の有効な予測 | [モデルの測定結果](docs/ja/MODEL_RESULTS.md)、[手法](docs/ja/JEVBENCH.md) |
 | 意図分類 | 英語 77 ラベル、韓国語 60 ラベル。チェックポイントごとに各言語 200 例 | [意図分類ベンチマーク](docs/ja/INTENT_BENCHMARK.md) |
-| typed-decisions | テスト分割全体: モデルごとに 400 ケース / 2,000 判断。採用ポリシー適用前の正解率は Gemma 4 E2B が 54.30%、Qwen3 0.6B が 31.25% | [手順と結果](docs/ja/TYPED_DECISIONS_BENCHMARK.md) |
+| typed-decisions | テスト分割全体: モデルごとに 400 ケース / 2,000 判断。採用ポリシー適用前の正解率は Gemma 4 E2B が 54.30%、Qwen3 0.6B が 31.25%; Gemma4 LoRA 特化実験: raw 正解率 57.85%、カバレッジ 48.35% | [手順と結果](docs/ja/TYPED_DECISIONS_BENCHMARK.md) · [LoRA](benchmarks/jev-lora-20260927/README.md) |
 | 画像の判断 | 静止画像の分類と実行モードの比較 | [画像ベンチマーク](docs/ja/VISION_BENCHMARK.md)、[TrashNet 評価](docs/ja/benchmarks/trashnet-vision-20260925/REPORT.md) |
 
 これらは、記載されたリビジョン、ハードウェア、設定で行ったローカル実験の記録です。正解率、採用された判断の正解率、採用率は分けて報告してください。一部の生データはローカルに保持され、gitignore の対象です。レポートに保存場所と再現手順を記載しています。JevBench 公開サブセットの結果は、公式の全スイートのスコアや順位ではありません。
@@ -339,7 +339,7 @@ AI エージェントには、環境をまたいで利用できる [L2S1 スキ�
 | モデル識別、事前検証、校正、ワーカーの所有権 | [モデルの交換](docs/ja/MODEL_INTERCHANGEABILITY.md) |
 | モデル別のテストコマンド | [検証](docs/ja/VERIFICATION.md) |
 | プレフィックス再利用と並列実行 | [プレフィックスアルゴリズム](docs/ja/SEMIF_ALGORITHM.md)、[並列実行](docs/ja/PARALLEL_EXECUTION.md) |
-| 学習による特化 | [LoRA 学習](docs/ja/DECISION_FINETUNE.md)、[出力ヘッド](docs/ja/OUTPUT_HEAD.md) |
+| 学習による特化 | [LoRA 学習](docs/ja/DECISION_FINETUNE.md)、[出力ヘッド](docs/ja/OUTPUT_HEAD.md), [Jev 型の共通チューニング](docs/JEV_LORA.md) |
 | データセットの準備とレポートツール | [l2s1-tools](docs/ja/crates/l2s1-tools/README.md) |
 | 記録されたモデル比較とその限界 | [モデルの測定結果](docs/ja/MODEL_RESULTS.md) |
 

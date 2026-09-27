@@ -326,7 +326,7 @@ Parallel execution and the vision profile are supported features with a differen
 | decision-rules-v1 · RTX 5090 / Windows | 5 checkpoints × CPU/CUDA; 36 distinct synthetic decisions × 3 passes. Gemma4 CUDA: 94.3% accepted accuracy, 91.7% correct/all; CPU timeout retained | [Results and conditions](docs/en/BENCHMARK.md#recorded-windows-rtx-5090-results), [aggregate audit](benchmarks/decision-rules-windows-20260926/audit.json) |
 | JevBench public subset | Original matrix: 22 checkpoints × 231 items; 5,082 valid predictions | [Model results](docs/en/MODEL_RESULTS.md), [method](docs/en/JEVBENCH.md) |
 | Intent classification | 77 English labels and 60 Korean labels; 200 examples per language per checkpoint | [Intent benchmark](docs/en/INTENT_BENCHMARK.md) |
-| typed-decisions | Complete test split: 400 cases / 2,000 judgments per model; Gemma 4 E2B 54.30%, Qwen3 0.6B 31.25% raw accuracy | [Protocol and results](docs/en/TYPED_DECISIONS_BENCHMARK.md) |
+| typed-decisions | Complete test split: 400 cases / 2,000 judgments per model; Gemma 4 E2B 54.30%, Qwen3 0.6B 31.25% raw accuracy; Gemma4 LoRA specialist pilot: 57.85% raw, 48.35% coverage | [Protocol and results](docs/en/TYPED_DECISIONS_BENCHMARK.md) · [LoRA](benchmarks/jev-lora-20260927/README.md) |
 | Vision decisions | Still-image classification and execution-mode studies | [Vision benchmark](docs/en/VISION_BENCHMARK.md), [TrashNet study](docs/en/benchmarks/trashnet-vision-20260925/REPORT.md) |
 
 These are recorded local experiments at their stated revisions, hardware, and settings. Report accuracy, accepted accuracy, and coverage separately. Some raw benchmark artifacts remain local and gitignored; the reports identify their locations and reproduction procedures. The JevBench public subset is not an official full-suite score or rank.
@@ -343,7 +343,7 @@ resident HTTP backend's decisions. See [agent setup](docs/en/AGENT_INTEGRATION.m
 | Model identity, preflight, calibration, worker ownership | [Model interchangeability](docs/en/MODEL_INTERCHANGEABILITY.md) |
 | Model-specific test commands | [Verification](docs/en/VERIFICATION.md) |
 | Prefix reuse and parallel execution | [Prefix algorithm](docs/en/SEMIF_ALGORITHM.md), [parallel execution](docs/en/PARALLEL_EXECUTION.md) |
-| Learned specialization | [LoRA training](docs/en/DECISION_FINETUNE.md), [output heads](docs/en/OUTPUT_HEAD.md) |
+| Learned specialization | [LoRA training](docs/en/DECISION_FINETUNE.md), [output heads](docs/en/OUTPUT_HEAD.md), [Jev-type model matrix](docs/JEV_LORA.md) |
 | Dataset preparation and report tools | [l2s1-tools](docs/en/crates/l2s1-tools/README.md) |
 | Recorded model comparisons and their limits | [Model results](docs/en/MODEL_RESULTS.md) |
 
