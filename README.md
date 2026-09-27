@@ -10,6 +10,8 @@ Use it to classify messages, route requests, check conditions, or assign ordered
 
 [Python SDK](sdks/python/README.md), [native batching](docs/en/BATCHING_API_REVIEW.md), and the [GitHub Release/npm/PyPI/Cargo pipeline](docs/en/RELEASE_PIPELINE.md).
 
+**Recorded on RTX 5090 / Windows:** Gemma 4 E2B Q8_0 reached **94.3% accepted accuracy**, **97.2% coverage**, and **67.6 ms p50 per three-decision request** on `decision-rules-v1`. Correct accepted answers were 91.7% of all decisions (33 correct, 2 wrong, 1 abstention per pass). This is 36 synthetic rule decisions repeated 3 times; loading and warmups are excluded. [Results and conditions](docs/en/BENCHMARK.md#recorded-windows-rtx-5090-results) · [Summary JSON](benchmarks/decision-rules-windows-20260926/summary.json).
+
 ## Install
 
 [v0.1.1](https://github.com/LuticaCANARD/L2S1/releases/tag/v0.1.1) is available on PyPI, npm and crates.io.
@@ -321,6 +323,7 @@ Parallel execution and the vision profile are supported features with a differen
 
 | Study | Recorded scope | Report |
 | --- | --- | --- |
+| decision-rules-v1 · RTX 5090 / Windows | 5 checkpoints × CPU/CUDA; 36 distinct synthetic decisions × 3 passes. Gemma4 CUDA: 94.3% accepted accuracy, 91.7% correct/all; CPU timeout retained | [Results and conditions](docs/en/BENCHMARK.md#recorded-windows-rtx-5090-results), [aggregate audit](benchmarks/decision-rules-windows-20260926/audit.json) |
 | JevBench public subset | Original matrix: 22 checkpoints × 231 items; 5,082 valid predictions | [Model results](docs/en/MODEL_RESULTS.md), [method](docs/en/JEVBENCH.md) |
 | Intent classification | 77 English labels and 60 Korean labels; 200 examples per language per checkpoint | [Intent benchmark](docs/en/INTENT_BENCHMARK.md) |
 | typed-decisions | Complete test split: 400 cases / 2,000 judgments per model; Gemma 4 E2B 54.30%, Qwen3 0.6B 31.25% raw accuracy | [Protocol and results](docs/en/TYPED_DECISIONS_BENCHMARK.md) |

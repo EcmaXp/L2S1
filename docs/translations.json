@@ -18,7 +18,7 @@
     {
       "source": "docs/BENCHMARK.md",
       "path": "BENCHMARK.md",
-      "source_sha256": "a168e129c09b453e6a88b3eb4994c4c3c4d3b505dbe6c867d917da9c5748e774",
+      "source_sha256": "45956e79aa5bebe633887a1aea861c3c04b1cbbbd7f1c82246de6b110c4bc76c",
       "languages": [
         "en",
         "ko",
@@ -118,7 +118,7 @@
     {
       "source": "docs/MODEL_RESULTS.md",
       "path": "MODEL_RESULTS.md",
-      "source_sha256": "a0fcc92d5b1c70bfe57aec5e00946d9664982c5c854ca240c9954bff49178f87",
+      "source_sha256": "c4ed413a66d805c6f4509c0817dc996a47f3fd5f34f23fa88a82f9e4cb8b29da",
       "languages": [
         "en",
         "ko",

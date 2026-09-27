@@ -17,6 +17,37 @@ Every request has one choice, one binary, and one ordinal decision. Choice optio
 
 This is a small synthetic rule-following benchmark, not a general reasoning, coding, multilingual, safety, or production-accuracy evaluation. Do not tune against these labels and present the resulting numbers as held-out accuracy. Real-model consistency tests in `tests/native.rs` remain separate.
 
+<a id="recorded-windows-rtx-5090-results"></a>
+## Recorded Windows / RTX 5090 results
+
+The user supplied this historical summary, recorded at **2026-09-26 16:21:17 UTC** (2026-09-27 01:21:17 KST), and identified the GPU as **NVIDIA GeForce RTX 5090**. Windows x86_64; CPU model and memory measurements are unavailable. The GPU identification is user-confirmed; no device log was supplied.
+
+| Model | Device | Status | Coverage | Accepted accuracy | Correct / all | Raw top-1 | p50 ms/request | p95 ms/request | Decisions/s | Correct accepted/s |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| smollm2 | cpu | ok | 13.9% | 20.0% | 2.8% | 38.9% | 7156.9 | 7805.6 | 0.41 | 0.01 |
+| smollm2 | cuda | ok | 11.1% | 25.0% | 2.8% | 38.9% | 41.6 | 44.9 | 71.61 | 1.99 |
+| qwen3 | cpu | ok | 77.8% | 35.7% | 27.8% | 33.3% | 22681.9 | 25154.9 | 0.13 | 0.04 |
+| qwen3 | cuda | ok | 83.3% | 33.3% | 27.8% | 41.7% | 44.7 | 47.0 | 66.42 | 18.45 |
+| gemma3 | cpu | ok | 91.7% | 51.5% | 47.2% | 50.0% | 33004.2 | 36213.8 | 0.09 | 0.04 |
+| gemma3 | cuda | ok | 91.7% | 57.6% | 52.8% | 61.1% | 67.7 | 70.7 | 44.37 | 23.42 |
+| tinyllama | cpu | ok | 0.0% | n/a | 0.0% | 38.9% | 9513.6 | 10583.5 | 0.31 | 0.00 |
+| tinyllama | cuda | ok | 0.0% | n/a | 0.0% | 38.9% | 34.2 | 36.3 | 87.59 | 0.00 |
+| gemma4 | cpu | timeout | — | — | — | — | — | — | — | — |
+| gemma4 | cuda | ok | 97.2% | 94.3% | 91.7% | 94.4% | 67.6 | 80.7 | 43.90 | 40.24 |
+
+Each completed run has 12 distinct requests / 36 labeled decisions, repeated 3 times: 36 timed requests / 108 measured decisions. Repeats are not independent accuracy examples. Loading and warmups are excluded. Settings: `legacy`, `fresh`, context 2048, batch 256, 4 threads, thresholds 0.8 / 0.05, timeout 1800 seconds.
+
+Gemma4 CUDA is the strongest candidate within this fixture: 33 correct accepted, 2 wrong accepted, and 1 abstention per unchanged pass. Accepted accuracy is 33/35 (94.3%), correct/all is 33/36 (91.7%), raw top-1 is 34/36 (94.4%), and coverage is 35/36 (97.2%). The 67.6 ms p50 measures a three-decision request. Decisions/s includes abstentions. TinyLlama accepts nothing, so accepted accuracy is `n/a`; Gemma4 CPU timed out and has no completed metrics.
+
+All 10 table rows match the supplied summary. The arithmetic audit checks 324 timing samples, counts, ratios, nearest-rank percentiles, and throughput. The fixture SHA256 matches after LF → Windows CRLF conversion. Every completed run reports 0 changes in 72 repeat comparisons, but Qwen3 and Gemma3 raw top-1 and SmolLM2 coverage differ between CPU and CUDA. The referenced per-run JSON and logs were not supplied; per-case predictions, scores, device placement, checkpoint/executable hashes, and native consistency were not independently verified. Inference was not rerun. This is synthetic fixture evidence, not general model quality.
+
+[Summary JSON](../benchmarks/decision-rules-windows-20260926/summary.json) · [Aggregate audit](../benchmarks/decision-rules-windows-20260926/audit.json) · [Source and hardware](../benchmarks/decision-rules-windows-20260926/provenance.json)
+
+```sh
+node web/scripts/verify-decision-rules.mjs
+```
+
+
 ## Run the five-model matrix
 
 Prerequisites: Rust dependencies already cached, CMake, a C++17 compiler, and locally acquired checkpoints. The bundled sys dependency builds the pinned llama.cpp source; CUDA runs additionally need the CUDA toolkit. Model paths are listed in `tests/fixtures/benchmark_models.json`; no Hugging Face client, account, or network request is used by the runner. Review the separate licenses before obtaining a model.

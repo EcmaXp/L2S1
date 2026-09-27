@@ -3,6 +3,7 @@
   import typedDecisions from '$lib/typed-decisions.json';
   import rtx3060 from '$lib/rtx3060.json';
   import sharedState from '$lib/shared-state-highlight.json';
+  import decisionRules from '../../../benchmarks/decision-rules-windows-20260926/summary.json';
   import { locale, translate } from '$lib/i18n';
   import { messages } from '$lib/i18n/landing';
   const t = (key: keyof typeof messages.en, params?: Record<string, string | number>) => translate($locale, messages, key, params);
@@ -24,7 +25,9 @@
   const quantized9b = rtx3060.rows.find((row) => row.id === 'Qwen3.5-9B-Q4_K_M')!;
   const q8_9b = rtx3060.rows.find((row) => row.id === 'Qwen3.5-9B-Q8_0')!;
   const memorySaved = (1 - quantized9b.peakGpuMiB / q8_9b.peakGpuMiB) * 100;
-  let benchmarkView = $state<'rtx3060' | 'warehouse'>('rtx3060');
+  let benchmarkView = $state<'rtx3060' | 'warehouse' | 'rules'>('rtx3060');
+  const rulesGemma = decisionRules.runs.find((run) => run.model === 'gemma4' && run.device === 'cuda')!;
+  const rulesPercent = (value: number | null) => value === null ? 'n/a' : `${(value * 100).toFixed(1)}%`;
   function typedFor(model: string): TypedRow | undefined {
     const key = model.toLowerCase().replace(/[^a-z0-9]/g, '');
     return typedRows.find((row) => row.model.toLowerCase().replace(/[^a-z0-9]/g, '').includes(key));
@@ -149,9 +152,11 @@
       </div>
       <div class="capacity-highlight"><div><span class="metric-label">{t('modelDownloadSize')}</span><strong>{(compact.fileSizeBytes / 1024 ** 2).toFixed(1)} <small>MiB</small></strong></div><p>{t('compactCapacity')}</p><a href="/benchmarks/rtx3060-20260926/manifest.json" download rel="external">{t('capacityEvidence')} ↗</a></div>
       <p class="quantization-highlight"><strong>{memorySaved.toFixed(1)}% ↓</strong><span>{t('quantizationSaving', { accuracy: quantized9b.rawAccuracy.toFixed(2) })}</span></p>
+      <p class="rules-highlight"><strong>{rulesPercent(rulesGemma.quality!.accepted_accuracy)}</strong><span>{t('rulesHighlight', { latency: rulesGemma.latency_ms!.p50.toFixed(1), coverage: rulesPercent(rulesGemma.quality!.coverage), correctAll: rulesPercent(rulesGemma.quality!.correct_fraction) })} <a href={`/docs/docs/${$locale}/BENCHMARK.md#recorded-windows-rtx-5090-results`} rel="external">{t('protocolReport')} ↗</a></span></p>
       <div class="benchmark-tabs" role="group" aria-label={t('benchmarkDataset')}>
         <button class:active={benchmarkView === 'rtx3060'} aria-pressed={benchmarkView === 'rtx3060'} onclick={() => benchmarkView = 'rtx3060'}>RTX 3060 · JevBench</button>
         <button class:active={benchmarkView === 'warehouse'} aria-pressed={benchmarkView === 'warehouse'} onclick={() => benchmarkView = 'warehouse'}>RTX 3080 · Warehouse / Typed-decisions</button>
+        <button class:active={benchmarkView === 'rules'} aria-pressed={benchmarkView === 'rules'} onclick={() => benchmarkView = 'rules'}>RTX 5090 · Decision rules</button>
       </div>
       {#if benchmarkView === 'warehouse' && nativeMeasurements.length}
       <figure class="performance-chart">
@@ -167,12 +172,27 @@
         <div class="table-scroll"><table><caption class="sr-only">{t('rtxTableCaption')}</caption><thead><tr><th>{t('checkpoint')}</th><th>{t('jevRawAccuracy')}</th><th>{t('policyCoverage')}</th><th>{t('policyAccuracy')}</th><th>{t('policyCorrectAll')}</th><th>p50 / p95</th><th>{t('sampledGpuMemory')}</th><th>{t('modelDownloadSize')}</th></tr></thead><tbody>{#each rtx3060.rows as row (row.id)}<tr><td>{row.model}</td><td>{typedPercent(row.rawAccuracy)}</td><td>{typedPercent(row.coverage)}</td><td>{typedPercent(row.acceptedAccuracy)}</td><td>{typedPercent(row.correctAll)}</td><td>{typedMs(row.p50Ms)} / {typedMs(row.p95Ms)}</td><td>{(row.peakGpuMiB / 1024).toFixed(2)} GiB</td><td>{fileGiB(row.fileSizeBytes)}</td></tr>{/each}</tbody></table></div>
         <p class="section-note">{t('capacityScope')} {t('rtxMethodology', { context: rtx3060.context })} GPT-OSS: <code>GGML_CUDA_DISABLE_GRAPHS=1</code>. <a href={`/docs/docs/${$locale}/RTX3060_BENCHMARK.md`} rel="external">{t('protocolReport')}</a></p>
         <p class="section-note">{t('downloadEvidence')} <a href="/benchmarks/rtx3060-20260926/summary.json" download rel="external">{t('rtxSummary')}</a> · <a href="/benchmarks/rtx3060-20260926/manifest.json" download rel="external">{t('manifest')}</a></p>
+      {:else if benchmarkView === 'rules'}
+        <div class="benchmark-meta"><strong>RTX 5090 · Windows x86_64</strong><span>decision-rules-v1 · 2026-09-26 UTC</span></div>
+        <p class="section-note">{t('rulesScope')}</p>
+        <div class="table-scroll"><table><caption class="sr-only">{t('rulesCaption')}</caption><thead><tr><th>{t('checkpoint')}</th><th>{t('rulesDevice')}</th><th>{t('rulesStatus')}</th><th>{t('policyCoverage')}</th><th>{t('policyAccuracy')}</th><th>{t('policyCorrectAll')}</th><th>{t('jevRawAccuracy')}</th><th>p50 / p95 ms</th><th>{t('rulesThroughput')}</th><th>{t('rulesCorrectThroughput')}</th></tr></thead><tbody>
+          {#each decisionRules.runs as run (`${run.model}.${run.device}`)}
+            <tr><td>{run.model_file}</td><td>{run.device.toUpperCase()}</td><td>{run.status}</td>
+              {#if run.quality && run.latency_ms}
+                <td>{rulesPercent(run.quality.coverage)}</td><td>{rulesPercent(run.quality.accepted_accuracy)}</td><td>{rulesPercent(run.quality.correct_fraction)}</td><td>{rulesPercent(run.quality.top1_accuracy_before_abstention)}</td><td>{run.latency_ms.p50.toFixed(1)} / {run.latency_ms.p95.toFixed(1)}</td><td>{run.decisions_per_second!.toFixed(2)}</td><td>{run.accepted_correct_decisions_per_second!.toFixed(2)}</td>
+              {:else}<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>{/if}
+            </tr>
+          {/each}
+        </tbody></table></div>
+        <p class="section-note">{t('rulesInterpretation')}</p>
+        <p class="section-note">{t('rulesEvidenceScope')} <a href={`/docs/docs/${$locale}/BENCHMARK.md#recorded-windows-rtx-5090-results`} rel="external">{t('protocolReport')}</a></p>
+        <p class="section-note">{t('downloadEvidence')} <a href="/benchmarks/decision-rules-windows-20260926/summary.json" download rel="external">{t('rulesSummary')}</a> · <a href="/benchmarks/decision-rules-windows-20260926/audit.json" download rel="external">{t('rulesAudit')}</a> · <a href="/benchmarks/decision-rules-windows-20260926/provenance.json" download rel="external">{t('manifest')}</a></p>
       {:else if measurements.length}
         <div class="benchmark-meta"><span class="status-dot"></span><strong>{t('localMeasurements')}</strong><span>{t('measurementMeta', { samples: benchmarks.samples })}</span></div>
         <div class="table-scroll"><table><caption class="sr-only">{t('tableCaption')}</caption><thead><tr><th>{t('checkpoint')}</th><th>{t('cpuP50')}</th><th>{t('cudaP50')}</th><th>{t('cudaThroughput')}</th><th>{t('cudaAbstentions')}</th>{#if typedRows.length}<th>{t('typedRaw')}</th><th>{t('typedCoverage')}</th><th>{t('typedAccepted')}</th><th>{t('typedCorrectAll')}</th><th>{t('typedLatency')}</th>{/if}</tr></thead><tbody>{#each measurements as row (row.model)}<tr><td>{row.model}</td><td>{row.cpuP50.toFixed(1)} <span>ms</span></td><td>{row.cudaP50.toFixed(1)} <span>ms</span></td><td>{row.cudaDecisionsPerSecond.toFixed(2)}</td><td>{Math.round(row.cudaAbstentionRate * 100)}%</td>{#if typedRows.length}{@const typed = typedFor(row.model)}<td>{typedPercent(typed?.accuracy)}</td><td>{typedPercent(typed?.coverage)}</td><td>{typedPercent(typed?.acceptedAccuracy)}</td><td>{typedPercent(typed?.correctAll)}</td><td>{typedMs(typed?.p50Ms)} / {typedMs(typed?.p95Ms)}</td>{/if}</tr>{/each}{#each additionalTypedRows as typed (typed.model)}<tr><td>{typed.model}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{typedPercent(typed.accuracy)}</td><td>{typedPercent(typed.coverage)}</td><td>{typedPercent(typed.acceptedAccuracy)}</td><td>{typedPercent(typed.correctAll)}</td><td>{typedMs(typed.p50Ms)} / {typedMs(typed.p95Ms)}</td></tr>{/each}</tbody></table></div>
         <p class="section-note">{t('warehouseNote', { date: benchmarks.date })}</p>
       {/if}
-      {#if typedRows.length}<p class="section-note">{t('typedNote', { cases: typedDecisions.cases, decisions: typedDecisions.decisions, gpu: typedDecisions.gpu, date: typedDecisions.date })} <a href={`/docs/docs/${$locale}/TYPED_DECISIONS_BENCHMARK.md`} rel="external">{t('protocolReport')}</a></p><p class="section-note">{t('downloadEvidence')} <a href="/benchmarks/typed-decisions-20260926/gemma4-e2b-summary.json" download rel="external">{t('gemmaSummary')}</a> · <a href="/benchmarks/typed-decisions-20260926/qwen3-06b-summary.json" download rel="external">{t('qwenSummary')}</a> · <a href="/benchmarks/typed-decisions-20260926/gemma4-e2b-scored.jsonl" download rel="external">{t('gemmaScored')}</a> · <a href="/benchmarks/typed-decisions-20260926/qwen3-06b-scored.jsonl" download rel="external">{t('qwenScored')}</a> · <a href="/benchmarks/typed-decisions-20260926/manifest.json" download rel="external">{t('manifest')}</a></p>{/if}
+      {#if benchmarkView === 'warehouse' && typedRows.length}<p class="section-note">{t('typedNote', { cases: typedDecisions.cases, decisions: typedDecisions.decisions, gpu: typedDecisions.gpu, date: typedDecisions.date })} <a href={`/docs/docs/${$locale}/TYPED_DECISIONS_BENCHMARK.md`} rel="external">{t('protocolReport')}</a></p><p class="section-note">{t('downloadEvidence')} <a href="/benchmarks/typed-decisions-20260926/gemma4-e2b-summary.json" download rel="external">{t('gemmaSummary')}</a> · <a href="/benchmarks/typed-decisions-20260926/qwen3-06b-summary.json" download rel="external">{t('qwenSummary')}</a> · <a href="/benchmarks/typed-decisions-20260926/gemma4-e2b-scored.jsonl" download rel="external">{t('gemmaScored')}</a> · <a href="/benchmarks/typed-decisions-20260926/qwen3-06b-scored.jsonl" download rel="external">{t('qwenScored')}</a> · <a href="/benchmarks/typed-decisions-20260926/manifest.json" download rel="external">{t('manifest')}</a></p>{/if}
       <p class="section-note"><a href={`/docs/docs/${$locale}/MODEL_AUDIT_20260926.md`} rel="external">{t('modelAudit')} ↗</a></p>
       <a class="benchmark-link" href={`/docs/docs/${$locale}/BENCHMARK.md`} rel="external">{t('runBenchmark')} <span aria-hidden="true">↗</span></a>
       </div>
@@ -1459,8 +1479,8 @@
   .stat-value > span { font-size: 14px; letter-spacing: 0; margin-left: 8px; color: #a5ddff; }
   .performance-stat p { font: 10px/1.8 monospace; color: var(--theme-muted); margin: 0; overflow-wrap: anywhere; }
   .metric-evidence { display: inline-block; margin-top: 8px; font: 10px monospace; color: #a5ddff; text-decoration: underline; text-underline-offset: 3px; }
-  .quantization-highlight { margin: -15px 0 32px; display: flex; align-items: center; gap: 18px; font: 11px/1.8 monospace; color: #c6e5f7; }
-  .quantization-highlight strong { font-size: 24px; color: #a5ddff; white-space: nowrap; }
+  .quantization-highlight, .rules-highlight { margin: -15px 0 32px; display: flex; align-items: center; gap: 18px; font: 11px/1.8 monospace; color: #c6e5f7; }
+  .quantization-highlight strong, .rules-highlight strong { font-size: 24px; color: #a5ddff; white-space: nowrap; }
   .benchmark-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
   .benchmark-tabs button { cursor: pointer; border: 1px solid #477593; border-radius: 6px; color: #c6e5f7; background: #001e334d; padding: 12px 15px; font: 11px/1.6 monospace; text-align: left; }
   .benchmark-tabs button.active { color: #003153; border-color: #a5ddff; background: #a5ddff; }
