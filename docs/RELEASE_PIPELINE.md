@@ -105,3 +105,7 @@ GitHub hosted macOS·Windows·arm64 CI 및 실제 레지스트리 인증·게시
 - [PyPI trusted publishing](https://docs.pypi.org/trusted-publishers/using-a-publisher/)
 - [crates.io 인증 action](https://github.com/rust-lang/crates-io-auth-action)
 - [Cargo 공개 의존성 규칙](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html)
+
+### Resume a partially published release
+
+If publication fails after `assemble` succeeds, dispatch `release.yml` from main with the existing `tag` and `resume_run_id` set to that run ID. The workflow reuses its sealed `release-assets` and `cargo-source`, checks the original tag, commit and checksums, and skips rebuilding. Existing registry versions must match those exact files. Cargo source is restored outside the checkout under `RUNNER_TEMP` so Cargo does not inherit the enclosing Git repository.
