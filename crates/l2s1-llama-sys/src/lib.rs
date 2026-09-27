@@ -1,4 +1,4 @@
-//! Raw FFI for the pinned native L2S1 llama.cpp bridge.
+//! Stable L2S1 ABI implemented in Rust over the pinned llama.cpp runtime.
 use std::ffi::{c_char, c_void};
 
 #[repr(C)]
@@ -39,6 +39,21 @@ pub struct NativeRestoreMetrics {
     pub fallback: i32,
 }
 unsafe extern "C" {
+    pub fn sd_forward_thinking(
+        engine: *mut c_void,
+        tokens: *const i32,
+        count: i32,
+        close_token: i32,
+        suffix: *const i32,
+        suffix_count: usize,
+        max_tokens: usize,
+        generated_tokens: *mut usize,
+        completed: *mut bool,
+        logits: *mut f32,
+        logits_count: usize,
+        error: *mut c_char,
+        cap: usize,
+    ) -> bool;
     pub fn sd_set_vision_projector_reuse(engine: *mut c_void, enabled: bool);
     pub fn sd_forward_vision_parallel_compact(
         engine: *mut c_void,
@@ -239,3 +254,19 @@ unsafe extern "C" {
         cap: usize,
     ) -> bool;
 }
+
+#[allow(
+    non_camel_case_types,
+    non_snake_case,
+    non_upper_case_globals,
+    dead_code,
+    improper_ctypes,
+    unnecessary_transmutes,
+    clippy::all
+)]
+mod raw {
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
+mod bridge;
+mod text;
+mod vision;

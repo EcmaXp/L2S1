@@ -54,6 +54,17 @@ jobs:
           cache: npm
           cache-dependency-path: sdks/typescript/package-lock.json
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install libclang (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+      - name: Locate libclang (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew list llvm >/dev/null 2>&1 || brew install llvm
+          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> "$GITHUB_ENV"
+      - name: Locate libclang (Windows)
+        if: runner.os == 'Windows'
+        run: echo 'LIBCLANG_PATH=C:\Program Files\LLVM\bin' >> "$GITHUB_ENV"
       - run: 'cargo test --locked --lib http::'
       - run: cargo build --release --locked --features '${{ matrix.feature }}' --bin l2s1 --message-format=json-render-diagnostics > native-build.jsonl
       - run: node sdks/typescript/scripts/bundle-runtime.mjs --cargo-log native-build.jsonl --devices '${{ matrix.devices }}'

@@ -3,11 +3,12 @@
 | SDK | Install command | Guide |
 | --- | --- | --- |
 | TypeScript / Node.js | `npm install @l2s1/node@0.1.1` | [typescript/README.md](typescript/README.md) |
+| C++17 | CMake target `l2s1::cpp` (source package) | [cpp/README.md](cpp/README.md) |
 | Python | `pip install l2s1-sdk==0.1.1` (`import l2s1`) | [python/README.md](python/README.md) |
 
 For the Rust library, run `cargo add l2s1@0.1.1 --features llama` in your application.
 
-Both SDKs call the same resident Rust engine over stdio or HTTP and expose native batching.
+All SDKs use the same resident Rust engine and expose native batching. C++ uses stdio; Python and TypeScript also support HTTP.
 Rust library and Cargo package sources remain in the repository root and `crates/`.
 
 Run build, test and release commands from the repository root unless a guide specifies an SDK directory.
