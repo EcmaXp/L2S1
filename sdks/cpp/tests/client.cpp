@@ -9,8 +9,10 @@ int main(int argc,char** argv) {
     try {
         LoadOptions options; options.binary_path=argv[1]; options.model="model with spaces;$(not-a-shell)";
         options.execution_mode="parallel";
+        options.policy=Policy{0.8123456789123456,0.05123456789123456};
         Request request{{{"temperature_c",6}},{{"cold","Temperature?",Binary{"warm","cold"},std::nullopt}}};
         auto engine=Engine::load(options); check(engine.capabilities()["api_version"]==1);
+        check(std::stod(engine.capabilities()["launch_policy"].get<std::string>())==options.policy->min_top_probability);
         auto plan=engine.prepare(request.decisions);
         check(std::get<BinaryValue>(plan.decide({{"temperature_c",6}}).results[0].value).value==true);
         check(std::get<BinaryValue>(plan.decide({{"temperature_c",20}}).results[0].value).value==false);

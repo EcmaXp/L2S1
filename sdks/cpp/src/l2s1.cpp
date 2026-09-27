@@ -5,6 +5,10 @@
 #include <climits>
 #include <cstring>
 #include <future>
+#include <iomanip>
+#include <limits>
+#include <locale>
+#include <sstream>
 #include <thread>
 #include <type_traits>
 #ifdef _WIN32
@@ -53,6 +57,12 @@ void valid_timeout(std::chrono::milliseconds timeout) {
 void valid_argument(const std::string& arg) {
     if (arg.find('\0') != std::string::npos) throw Error("process arguments must not contain NUL","invalid_options");
 }
+std::string precise(double value) {
+    std::ostringstream out;
+    out.imbue(std::locale::classic());
+    out << std::setprecision(std::numeric_limits<double>::max_digits10) << value;
+    return out.str();
+}
 std::vector<std::string> arguments(const LoadOptions& o) {
     if (o.model.empty() || o.binary_path.empty()) throw Error("model and binary_path are required","invalid_options");
     valid_timeout(o.startup_timeout); valid_timeout(o.timeout);
@@ -62,7 +72,7 @@ std::vector<std::string> arguments(const LoadOptions& o) {
     auto string = [&](const char* flag, const auto& value) { if (value) { args.emplace_back(flag); args.push_back(*value); } };
     string("--mmproj",o.mmproj); string("--lora",o.lora);
     number("--context",o.context); number("--batch",o.batch); number("--ubatch",o.ubatch); number("--threads",o.threads); number("--parallel-width",o.parallel_width); number("--gpu-layers",o.gpu_layers);
-    if (o.policy) { args.insert(args.end(),{"--min-top-probability",std::to_string(o.policy->min_top_probability),"--min-candidate-mass",std::to_string(o.policy->min_candidate_mass)}); }
+    if (o.policy) { args.insert(args.end(),{"--min-top-probability",precise(o.policy->min_top_probability),"--min-candidate-mass",precise(o.policy->min_candidate_mass)}); }
     for (const auto& arg : o.extra_args) {
         if (arg == "--" || arg == "--stdio" || arg.rfind("--stdio=",0) == 0 || arg == "--listen" || arg.rfind("--listen=",0) == 0) throw Error("--stdio/--listen are managed by Engine::load","invalid_options");
         args.push_back(arg);
