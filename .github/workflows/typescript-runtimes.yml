@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -71,7 +71,7 @@ jobs:
       - run: node sdks/typescript/scripts/verify-runtime.mjs 'sdks/typescript/runtime-packages/${{ matrix.platform }}'
       - run: npm pack --pack-destination ../../ --ignore-scripts
         working-directory: sdks/typescript/runtime-packages/${{ matrix.platform }}
-      - run: npm ci && npm run build && npm run check && npm test && npm run test:rust && npm pack
+      - run: node scripts/install-ci.mjs && npm run build && npm run check && npm test && npm run test:rust && npm pack
         working-directory: sdks/typescript
       - run: |
           version=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")

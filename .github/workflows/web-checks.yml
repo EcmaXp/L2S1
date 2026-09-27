@@ -1,7 +1,11 @@
 name: Web checks
 
 on:
+  pull_request:
+    paths: ['web/**', 'docs/**', 'sdks/*/README.md', '.github/workflows/web-checks.yml']
   push:
+    branches: [main]
+    paths: ['web/**', 'docs/**', 'sdks/*/README.md', '.github/workflows/web-checks.yml']
     tags: ['v*']
   workflow_dispatch:
 

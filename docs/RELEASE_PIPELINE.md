@@ -109,3 +109,9 @@ GitHub hosted macOS·Windows·arm64 CI 및 실제 레지스트리 인증·게시
 ### Resume a partially published release
 
 If publication fails after `assemble` succeeds, dispatch `release.yml` from main with the existing `tag` and `resume_run_id` set to that run ID. The workflow reuses its sealed `release-assets` and `cargo-source`, checks the original tag, commit and checksums, and skips rebuilding. Existing registry versions must match those exact files. Cargo source is restored outside the checkout under `RUNNER_TEMP` so Cargo does not inherit the enclosing Git repository.
+
+### SDK CI installation
+
+`node sdks/typescript/scripts/install-ci.mjs` installs only the locked development tools. It temporarily excludes the native runtime optional dependencies from npm's input and restores both manifest files byte-for-byte, even on failure. CI builds those runtimes separately and verifies the packed SDK with its matching runtime in `test:package`. This keeps build-tool installation independent of whether the release's runtime packages have been published yet.
+
+After publication, refresh the checked-in developer lockfile with `npm install --package-lock-only --ignore-scripts` in `sdks/typescript`. Wait for PR checks before merging; Python and TypeScript checks also run on matching main changes, and reusable checks use the triggering commit SHA unless an explicit release commit is supplied.
