@@ -258,6 +258,14 @@ mod native {
             Ok("0") | Err(env::VarError::NotPresent) => false,
             _ => panic!("SKID_CUDA must be 0 or 1"),
         };
+        let device = match env::var("SKID_DEVICE").as_deref() {
+            Err(env::VarError::NotPresent) if cuda => "cuda",
+            Err(env::VarError::NotPresent) => "cpu",
+            Ok(device @ ("cpu" | "metal")) if !cuda => device,
+            Ok("cuda") => "cuda",
+            _ => panic!("SKID_DEVICE must be cpu, cuda, or metal and agree with SKID_CUDA"),
+        }
+        .to_owned();
         let iterations = setting("SKID_BENCH_ITERATIONS", 3, 1);
         let warmup = setting("SKID_BENCH_WARMUP", 1, 0);
         let context = setting("SKID_CONTEXT", 2048, 1);
@@ -269,14 +277,32 @@ mod native {
         };
         policy.validate().unwrap();
         let started = Instant::now();
-        let mut backend = LlamaBackend::load(
-            Path::new(&model),
-            context,
-            batch,
-            threads,
-            cuda,
-            policy.clone(),
-        )
+        let mut backend = if device == "metal" {
+            LlamaBackend::load_with_metal_options(
+                Path::new(&model),
+                ComputeOptions {
+                    context,
+                    batch,
+                    ubatch: batch,
+                    threads,
+                    flash_attention: FlashAttention::Off,
+                    gpu_layers: None,
+                    cpu_moe_layers: 0,
+                    model_load_mode: ModelLoadMode::Auto,
+                },
+                policy.clone(),
+                PromptProfile::Auto,
+            )
+        } else {
+            LlamaBackend::load(
+                Path::new(&model),
+                context,
+                batch,
+                threads,
+                device == "cuda",
+                policy.clone(),
+            )
+        }
         .unwrap();
         let load_ms = started.elapsed().as_secs_f64() * 1000.0;
         backend.set_prompt_layout(match env::var("SKID_PROMPT_LAYOUT").as_deref() {

@@ -62,7 +62,7 @@ target/release/l2s1-tools benchmark-models \
   --warmup 1
 ```
 
-Runner는 요청 시 `--locked --offline` 및 CUDA 기능을 사용하여 릴리스 테스트 실행 파일을 한 번 빌드하고 각 모델을 해시하며 한 번에 하나의 모델/장치를 실행합니다. CPU가 기본 장치입니다. CUDA는 명시적이며 자동으로 CPU로 대체될 수 없습니다. 네이티브 백엔드는 전체 실행에 대해 하나의 로드된 모델을 재사용합니다. Rust 프로세스 시작, 화물 편집, 적재 및 워밍업은 정상 상태 타이밍에서 제외됩니다.
+Runner는 요청 시 `--locked --offline` 및 CUDA 기능을 사용하여 릴리스 테스트 실행 파일을 한 번 빌드하고 각 모델을 해시하며 한 번에 하나의 모델/장치를 실행합니다. CPU가 기본 장치입니다. CUDA는 명시적이며 자동으로 CPU로 대체될 수 없습니다. macOS에서는 `--device cpu metal`을 지정하면 `llama-metal` 기능으로 한 번 빌드합니다. CUDA와 Metal은 한 번의 실행에서 함께 지정할 수 없습니다. GPU 배치 여부는 각 Metal 리포트의 `backend.offload_device`에서 확인합니다. 네이티브 백엔드는 전체 실행에 대해 하나의 로드된 모델을 재사용합니다. Rust 프로세스 시작, 화물 편집, 적재 및 워밍업은 정상 상태 타이밍에서 제외됩니다.
 
 하위 집합을 선택하거나 설정을 변경합니다.
 
@@ -137,4 +137,4 @@ SKID_BENCH_OUTPUT=results/benchmark/single-model.json \
   native::model_decision_benchmark -- --exact --ignored --nocapture
 ```
 
-직접 실행에서는 `SKID_CONTEXT`, `SKID_BATCH`, `SKID_THREADS`, `SKID_MIN_TOP_PROBABILITY` 및 `SKID_MIN_CANDIDATE_MASS`를 허용합니다. Rust 실행기는 체크포인트 해시와 비교 테이블을 추가합니다. 이전 `tests/performance.rs`는 단일 창고 예의 반복 측정에 계속 사용할 수 있습니다.
+직접 실행에서는 `SKID_DEVICE`(`cpu`, `cuda`, `metal`. 해당 기능으로 빌드해야 합니다), `SKID_CONTEXT`, `SKID_BATCH`, `SKID_THREADS`, `SKID_MIN_TOP_PROBABILITY` 및 `SKID_MIN_CANDIDATE_MASS`를 허용합니다. Rust 실행기는 체크포인트 해시와 비교 테이블을 추가합니다. 이전 `tests/performance.rs`는 단일 창고 예의 반복 측정에 계속 사용할 수 있습니다.
