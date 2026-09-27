@@ -2,13 +2,20 @@
   import { onMount } from 'svelte';
   import { resolve, asset } from '$app/paths';
   import { locale } from '$lib/i18n';
-  import { visibleDetections, type Detection, type DetectionRecording, type DetectorOutput, type Gallery, type Sample } from '$lib/vision/types';
-  import config from '$lib/vision/detector.json';
+  import { visibleDetections, type Detection, type DetectionRecording, type DetectorOutput, type Gallery, type Sample, type Improvement } from '$lib/vision/types';
+  import baseConfig from '$lib/vision/detector.json';
+  import openConfig from '$lib/vision/open-detector.json';
+  import MaterialClassifier from '$lib/vision/MaterialClassifier.svelte';
   import '$lib/vision/visual.css';
   const say = (ko: string, en: string, ja: string) => $locale === 'ko' ? ko : $locale === 'ja' ? ja : en;
   let recording = $state<DetectionRecording>();
+  let recordings = $state<Partial<Record<'detr' | 'owlvit', DetectionRecording>>>({});
+  let engine = $state<'detr' | 'owlvit'>('detr');
+  const config = $derived(engine === 'detr' ? baseConfig : openConfig);
+  let improvement = $state<Improvement>();
   let samples = $state<Sample[]>([]);
   let current = $state<Sample>();
+  const materialResult = $derived(current && improvement?.model.observations[current.name]);
   let imageUrl = $state('');
   let imageName = $state('');
   let imageWidth = $state(512);
@@ -31,6 +38,7 @@
   const recordedSample = $derived(recording?.samples.find((sample) => sample.name === current?.name));
   const objectName = (label: string) => ({ bottle: say('병','bottle','ボトル'), bowl: say('그릇','bowl','ボウル'), vase: say('꽃병','vase','花瓶'), cup: say('컵','cup','カップ'), backpack: say('배낭','backpack','リュック'), refrigerator: say('냉장고','refrigerator','冷蔵庫'), banana: say('바나나','banana','バナナ'), cake: say('케이크','cake','ケーキ'), book: say('책','book','本') }[label] ?? label);
   function clear() { detections = []; mode = 'empty'; elapsedMs = undefined; error = ''; activeBox = -1; }
+  function changeEngine() { stop(); recording = recordings[engine]; threshold = engine === 'detr' ? 0.5 : openConfig.display_score; if (current) choose(current); else clear(); }
   function releaseUrl() { if (imageUrl.startsWith('blob:')) URL.revokeObjectURL(imageUrl); }
   function choose(sample: Sample) {
     uploadVersion++; releaseUrl(); clear(); current = sample;
@@ -60,7 +68,7 @@
   }
   function stop() { worker?.terminate(); worker = undefined; clearTimeout(timeout); busy = false; progress = ''; }
   function run() {
-    if (!imageUrl || busy) return;
+    if (!imageUrl || busy || engine !== 'detr') return;
     clear(); busy = true; phase = 'loading'; progress = '';
     try {
       worker ??= new Worker(new URL('../../lib/vision/worker.ts', import.meta.url), { type: 'module' });
@@ -82,11 +90,12 @@
   }
   onMount(() => {
     let mounted = true;
-    Promise.all([fetch(asset('/trashnet/detections.json')), fetch(asset('/trashnet/recorded.json'))]).then(async ([detectionResponse, galleryResponse]) => {
-      if (!detectionResponse.ok || !galleryResponse.ok) throw new Error('recordings');
+    Promise.all([fetch(asset('/trashnet/detections.json')), fetch(asset('/trashnet/recorded.json')), fetch(asset('/trashnet/open-detections.json')), fetch(asset('/trashnet/improvement.json'))]).then(async ([detectionResponse, galleryResponse, openResponse, improvedResponse]) => {
+      if (!detectionResponse.ok || !galleryResponse.ok || !openResponse.ok || !improvedResponse.ok) throw new Error('recordings');
       const saved: DetectionRecording = await detectionResponse.json(); const gallery: Gallery = await galleryResponse.json();
+      const openSaved: DetectionRecording = await openResponse.json(); const improved: Improvement = await improvedResponse.json();
       if (!mounted) return;
-      recording = saved; samples = gallery.source.records;
+      recordings = { detr: saved, owlvit: openSaved }; recording = saved; improvement = improved; samples = [...gallery.source.records, ...improved.test_records];
       const requested = new URL(window.location.href).searchParams.get('sample') ?? 'glass330.jpg';
       // Only resolve a filename against the bundled manifest; never fetch an arbitrary query URL.
       const initial = samples.find((sample) => sample.name.split('/').at(-1) === requested) ?? samples[0];
@@ -102,6 +111,9 @@
   <p class="lead">{say('사진 위에 실제 탐지 위치와 물체 이름을 표시합니다. 예제를 살펴보거나 내 사진을 업로드해 브라우저에서 직접 탐지해 보세요.','See actual object locations and labels on the image. Explore an example or upload your own photo and run detection in your browser.','写真上に実際の検出位置と物体名を表示します。サンプルを確認したり、自分の写真をブラウザーで検出できます。')}</p>
   <nav class="tabs" aria-label={say('시각 예제','Visual examples','視覚サンプル')}><a href={resolve('/trashnet')}>TrashNet</a><a href={resolve('/detect')} aria-current="page">Detect</a><a href={resolve('/demo')}>{say('이미지 판단 실험','Image playground','画像判断')}</a></nav>
   <div class="provenance">{say('DETR 객체 탐지 모델이 COCO의 물체 종류와 위치를 찾습니다. L2S1의 재질 분류와는 별도 예제입니다. TrashNet에는 박스 정답이 없어 위치 정확도를 평가하지 않으며, 높은 점수의 오탐도 있습니다.','The DETR detector finds COCO object categories and locations. This is separate from L2S1 material classification. TrashNet has no bounding-box annotations here, so localization accuracy is not evaluated; high-scoring false detections can occur.','DETRがCOCOの物体カテゴリと位置を検出します。L2S1の素材分類とは別のサンプルです。TrashNetに正解ボックスはないため位置精度は評価せず、高スコアの誤検出もあります。')}</div>
+  <div class="controls"><label>{say('탐지 모델 비교','Detection model','検出モデル')}<select aria-label={say('탐지 모델 비교','Detection model','検出モデル')} bind:value={engine} onchange={changeEngine} disabled={busy || loading}><option value="detr">DETR · COCO</option><option value="owlvit">OWL-ViT · {say('쓰레기 어휘 · 기록 비교','waste vocabulary · recordings','ごみ語彙・記録比較')}</option></select></label></div>
+  {#if engine === 'owlvit'}<p class="provenance">{say('15개 쓰레기 관련 표현으로 실제 탐지하고 겹치는 박스를 줄인 실험입니다. 오탐이 남아 있으며 위치 정확도 향상을 입증한 결과는 아닙니다. 점수는 DETR과 직접 비교할 수 없습니다. 브라우저 실행 검증을 통과하지 않아 CPU 실행 기록만 제공합니다.','An experiment using 15 waste-related prompts and overlap suppression. False detections remain; this does not establish improved localization accuracy. Scores are not directly comparable with DETR. Browser execution did not pass verification, so only CPU recordings are available.','15個のごみ関連表現と重複抑制による実験です。誤検出が残り、位置精度の改善を実証していません。スコアはDETRと直接比較できません。ブラウザー実行は検証に通らなかったためCPUの記録のみ提供します。')}</p>{/if}
+  {#if materialResult}<div class="panel material-decision"><h2>{say('개선 모델의 사진 전체 재질 판단','Trained classifier: whole-image material','学習済み分類器：画像全体の素材')}</h2><p><strong>{materialResult.selected}</strong> · {say('실행 기록','Recorded inference','実行記録')} · SigLIP2</p><p class="muted">{say('사진 전체를 분류한 결과입니다. 아래 각 박스의 재질을 판정한 결과는 아닙니다.','This classifies the whole photo; it does not assign a material to each box below.','写真全体の分類です。下の各ボックスの素材を判定した結果ではありません。')}</p></div>{/if}
   <div class="split">
     <section class="panel">
       <div class="controls image-controls">
@@ -117,10 +129,10 @@
         {:else}<div class="empty">{loading ? say('예제를 불러오는 중…','Loading examples…','サンプルを読み込み中…') : say('사진을 선택하세요.','Choose a photo.','写真を選択してください。')}</div>{/if}
       </div>
       <p class="muted filename">{imageName} {#if imageUrl}· {imageWidth} × {imageHeight}{/if}{#if current} · {say('데이터셋 재질','Dataset material','データセットの素材')}: {current.label}{/if}</p>
-      <div class="display-controls"><label><input type="checkbox" bind:checked={showBoxes} /> {say('박스 표시','Show boxes','ボックス表示')}</label><label>{say('표시할 최소 점수','Minimum display score','表示する最小スコア')} <strong>{threshold.toFixed(2)}</strong><input aria-label={say('표시할 최소 점수','Minimum display score','表示する最小スコア')} type="range" min="0.05" max="0.99" step="0.01" bind:value={threshold} oninput={() => activeBox = -1} /></label></div>
+      <div class="display-controls"><label><input type="checkbox" bind:checked={showBoxes} /> {say('박스 표시','Show boxes','ボックス表示')}</label><label>{say('표시할 최소 점수','Minimum display score','表示する最小スコア')} <strong>{threshold.toFixed(2)}</strong><input aria-label={say('표시할 최소 점수','Minimum display score','表示する最小スコア')} type="range" min={config.minimum_score} max="0.99" step="0.01" bind:value={threshold} oninput={() => activeBox = -1} /></label></div>
       <p class="muted">{say('점수 조절은 현재 탐지 결과에서 표시할 박스만 걸러냅니다. 모델을 다시 실행하지 않습니다.','The slider filters boxes from the current detections. It does not rerun the model.','スライダーは検出済みのボックスを絞り込みます。モデルは再実行しません。')}</p>
-      <div class="run-controls"><button class="primary" onclick={run} disabled={!imageUrl || busy || loading}>{busy ? say('탐지 중…','Detecting…','検出中…') : say('이 사진 직접 탐지','Run detection on this photo','この写真を検出')}</button>{#if busy}<button onclick={stop}>{say('중지','Stop','停止')}</button>{:else if recordedSample}<button onclick={() => { if (current) choose(current); }}>{say('실제 실행 기록 보기','Show recorded inference','実行記録を表示')}</button>{/if}</div>
-      <p class="muted">{say('처음 실행할 때 공개 모델을 내려받습니다(약 43 MB + 실행 파일). 사진은 업로드되지 않고 이 브라우저에서 처리됩니다. JPEG·PNG·WebP, 최대 8 MiB.','The first run downloads a public model (~43 MB plus runtime). Your photo stays in this browser. JPEG, PNG or WebP, up to 8 MiB.','初回実行時に公開モデルをダウンロードします（約43 MB＋ランタイム）。写真は送信されずブラウザー内で処理されます。JPEG・PNG・WebP、最大8 MiB。')}</p>
+      <div class="run-controls"><button class="primary" onclick={run} disabled={!imageUrl || busy || loading || engine !== 'detr'}>{busy ? say('탐지 중…','Detecting…','検出中…') : say('이 사진 직접 탐지','Run detection on this photo','この写真を検出')}</button>{#if busy}<button onclick={stop}>{say('중지','Stop','停止')}</button>{:else if recordedSample}<button onclick={() => { if (current) choose(current); }}>{say('실제 실행 기록 보기','Show recorded inference','実行記録を表示')}</button>{/if}</div>
+      <p class="muted">{say('DETR 탐지는 이 브라우저에서 실행됩니다. 첫 모델 다운로드 약 43 MB + 실행 파일. OWL-ViT는 기록 비교만 제공합니다. JPEG·PNG·WebP, 최대 8 MiB.','DETR runs in this browser; first download ~43 MB plus runtime. OWL-ViT is available as recorded comparisons only. JPEG, PNG or WebP, up to 8 MiB.','DETRはブラウザーで実行します（初回約43 MBとランタイム）。OWL-ViTは記録比較のみです。JPEG・PNG・WebP、最大8 MiB。')}</p>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
     </section>
     <section class="panel results" aria-busy={busy}>
@@ -132,13 +144,14 @@
           {:else}<p class="empty">{say('이 점수 기준에서 탐지된 물체가 없습니다. 물체가 없다는 뜻은 아닙니다.','No objects detected at this threshold. This does not establish that the image contains no objects.','このスコア基準で検出された物体はありません。物体が存在しないという意味ではありません。')}</p>{/each}
           <p class="muted">{say('점수는 탐지 모델의 점수이며, 정답 확률이나 TrashNet 재질 분류 점수가 아닙니다.','Scores come from the detector, not calibrated correctness probabilities or TrashNet material scores.','スコアは検出モデルの値であり、正解確率やTrashNetの素材スコアではありません。')}</p>
           <button onclick={download}>{say('박스 JSON 저장','Download boxes as JSON','ボックスJSONを保存')}</button><details><summary>{say('좌표와 원본 결과','Coordinates and raw results','座標と元の結果')}</summary><pre>{JSON.stringify({ coordinates: 'normalized_xyxy', detections: visible }, null, 2)}</pre></details>
-        {:else}<p class="empty">{say('이 사진의 탐지 기록은 없습니다. 직접 탐지를 실행하면 박스가 표시됩니다.','No detection is recorded for this photo. Run detection to display its boxes.','この写真の検出記録はありません。検出を実行するとボックスが表示されます。')}</p>{/if}
+        {:else}<p class="empty">{say('이 사진의 탐지 기록은 없습니다. DETR 모델을 선택하면 직접 탐지할 수 있습니다.','No detection is recorded for this photo. Select DETR to run detection.','この写真の検出記録はありません。DETRを選択すると検出できます。')}</p>{/if}
       </div>
       {#if recording}<h3 class="example-heading">{say('바로 볼 수 있는 예제','Ready-to-view examples','すぐに見られるサンプル')}</h3><div class="sample-grid">{#each recording.samples as sample (sample.name)}<button onclick={() => choose(sample)} disabled={busy} aria-label={sample.name.split('/').at(-1)} aria-pressed={current?.name === sample.name}><img src={asset(sample.image_url)} alt={sample.label} width="512" height="384" loading="lazy" /><span>{sample.name.split('/').at(-1)}</span></button>{/each}</div>{/if}
     </section>
   </div>
-  <footer class="footer"><a href={`https://huggingface.co/${config.model}/tree/${config.revision}`} target="_blank" rel="noreferrer">{config.model}</a> · <a href={asset('/trashnet/THIRD_PARTY_NOTICE.txt')} rel="external">TrashNet / {say('이미지 출처','Image credits','画像の出典')}</a> · <a href={asset('/trashnet/detections.json')} download>{say('탐지 실행 기록','Detection recording','検出実行記録')}</a><br />{say('12장의 예제는 고정 버전 DETR Q8 CPU 추론 결과입니다. 새 사진은 WASM으로 실행되므로 기기와 실행 환경에 따라 점수와 시간이 달라질 수 있습니다.','The 12 examples were recorded with a pinned DETR Q8 CPU model. New photos run with WASM; scores and timings may differ across devices and runtimes.','12枚のサンプルは固定版DETR Q8のCPU推論記録です。新しい写真はWASMで実行するため、機器や環境でスコアと時間が変わる場合があります。')}</footer>
+  <MaterialClassifier sample={current} />
+  <footer class="footer"><a href={`https://huggingface.co/${config.model}/tree/${config.revision}`} target="_blank" rel="noreferrer">{config.model}</a> · <a href={asset('/trashnet/THIRD_PARTY_NOTICE.txt')} rel="external">TrashNet / {say('이미지 출처','Image credits','画像の出典')}</a> · <a href={asset(engine === 'detr' ? '/trashnet/detections.json' : '/trashnet/open-detections.json')} download>{say('탐지 실행 기록','Detection recording','検出実行記録')}</a><br />{say('각 모델의 12장 예제는 고정 버전 Q8 CPU 추론 결과입니다. 새 사진은 WASM으로 실행되므로 기기와 실행 환경에 따라 점수와 시간이 달라질 수 있습니다.','Each model has 12 examples recorded with pinned Q8 CPU inference. New photos run with WASM; scores and timings may differ across devices and runtimes.','各モデルの12枚のサンプルは固定版Q8のCPU推論記録です。新しい写真はWASMで実行するため、機器や環境でスコアと時間が変わる場合があります。')}</footer>
 </main>
 <style>
-  .image-controls{margin-top:0!important}.sample-select{flex:1;min-width:180px}.sample-select select{width:100%}.upload-label{max-width:100%}.upload-label input{display:block;max-width:240px;margin-top:8px;font-size:12px}.canvas{position:relative;background:#f5f5f3;border-radius:8px;overflow:hidden;isolation:isolate}.canvas>img{display:block;width:100%;height:auto}.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.overlay rect{fill:#1cbb9910;stroke:#007b65;stroke-width:2.5;vector-effect:non-scaling-stroke}.overlay rect.highlighted{fill:#f6b93430;stroke:#c37500;stroke-width:4}.box-label{position:absolute;max-width:95%;background:#005f4f;color:white;font-size:11px;font-weight:700;padding:4px 6px;border-radius:3px;pointer-events:none;white-space:nowrap}.box-label.highlighted{background:#7a4800}.filename{overflow-wrap:anywhere}.display-controls{display:flex;flex-wrap:wrap;gap:20px;align-items:center;margin:22px 0 12px}.display-controls>label:last-child{flex:1}.display-controls input[type=range]{display:block;width:100%;margin-top:10px;accent-color:var(--theme-accent)}.display-controls input[type=checkbox]{accent-color:var(--theme-accent)}.display-controls strong{float:right;margin-left:10px}.run-controls{display:flex;flex-wrap:wrap;gap:10px}.results>h2{display:flex;justify-content:space-between;align-items:center}.object-row{width:100%;display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:center;text-align:left;margin:10px 0;padding:13px!important}.object-row.active{outline:2px solid var(--theme-chart)}.object-index{font-size:12px;font-weight:bold}.object-row strong{font-size:15px}.object-row small{display:block;font-size:10px;margin-top:6px;color:var(--theme-muted)}.object-row b{font-size:12px}.example-heading{border-top:1px solid var(--theme-border);padding-top:22px;margin-top:25px}.sample-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.sample-grid button{padding:0!important;overflow:hidden}.sample-grid button[aria-pressed=true]{outline:2px solid var(--theme-chart);outline-offset:2px}.sample-grid img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}.sample-grid span{display:block;font-size:9px;margin:7px 4px;overflow-wrap:anywhere}.progress{overflow-wrap:anywhere}@media(max-width:500px){.box-label{font-size:9px;padding:3px}.object-row{gap:7px}}
+  .material-decision{margin-bottom:20px}.image-controls{margin-top:0!important}.sample-select{flex:1;min-width:180px}.sample-select select{width:100%}.upload-label{max-width:100%}.upload-label input{display:block;max-width:240px;margin-top:8px;font-size:12px}.canvas{position:relative;background:#f5f5f3;border-radius:8px;overflow:hidden;isolation:isolate}.canvas>img{display:block;width:100%;height:auto}.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.overlay rect{fill:#1cbb9910;stroke:#007b65;stroke-width:2.5;vector-effect:non-scaling-stroke}.overlay rect.highlighted{fill:#f6b93430;stroke:#c37500;stroke-width:4}.box-label{position:absolute;max-width:95%;background:#005f4f;color:white;font-size:11px;font-weight:700;padding:4px 6px;border-radius:3px;pointer-events:none;white-space:nowrap}.box-label.highlighted{background:#7a4800}.filename{overflow-wrap:anywhere}.display-controls{display:flex;flex-wrap:wrap;gap:20px;align-items:center;margin:22px 0 12px}.display-controls>label:last-child{flex:1}.display-controls input[type=range]{display:block;width:100%;margin-top:10px;accent-color:var(--theme-accent)}.display-controls input[type=checkbox]{accent-color:var(--theme-accent)}.display-controls strong{float:right;margin-left:10px}.run-controls{display:flex;flex-wrap:wrap;gap:10px}.results>h2{display:flex;justify-content:space-between;align-items:center}.object-row{width:100%;display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:center;text-align:left;margin:10px 0;padding:13px!important}.object-row.active{outline:2px solid var(--theme-chart)}.object-index{font-size:12px;font-weight:bold}.object-row strong{font-size:15px}.object-row small{display:block;font-size:10px;margin-top:6px;color:var(--theme-muted)}.object-row b{font-size:12px}.example-heading{border-top:1px solid var(--theme-border);padding-top:22px;margin-top:25px}.sample-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.sample-grid button{padding:0!important;overflow:hidden}.sample-grid button[aria-pressed=true]{outline:2px solid var(--theme-chart);outline-offset:2px}.sample-grid img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}.sample-grid span{display:block;font-size:9px;margin:7px 4px;overflow-wrap:anywhere}.progress{overflow-wrap:anywhere}@media(max-width:500px){.box-label{font-size:9px;padding:3px}.object-row{gap:7px}}
 </style>

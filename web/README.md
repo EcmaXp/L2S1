@@ -54,4 +54,4 @@ appearance tokens. Preview an explicit language with `/webgpu?lang=ja`.
 
 ## TrashNet and Detect visual examples
 
-Open `/trashnet` for the 120-photo, three-model classification gallery, or `/detect` for bounding boxes and actual browser object detection on uploaded images. Twelve recorded detector examples work immediately. See [setup, provenance and validation](../docs/TRASHNET_DETECT_DEMO.md).
+Open `/trashnet` to compare three historical L2S1 baselines with a separately trained SigLIP2 classifier on 120 photos, and inspect 481 independent test photos. The trained classifier scores 113/120 (94.2%) on the historical comparison and 466/481 (96.9%) on the separate test. New-photo classification uses an optional local server. `/detect` offers recorded bounding boxes, DETR browser inference, and an OWL-ViT recording-only experiment; detector accuracy gains are not claimed. Both pages include image attribution and the full MIT notice. See [setup, provenance, redistribution terms and validation](../docs/TRASHNET_DETECT_DEMO.md).

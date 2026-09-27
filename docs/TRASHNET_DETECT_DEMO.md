@@ -1,5 +1,41 @@
 # TrashNet visual gallery and object detection
 
+## Image redistribution
+
+The [author's official dataset page](https://huggingface.co/datasets/garythung/trashnet)
+explicitly labels the dataset **MIT**. The pinned source repository's
+[LICENSE](https://github.com/garythung/trashnet/blob/6fa2b878c6c1b4304b91109070ce0edf9279bb31/LICENSE)
+allows copying, publishing and redistribution while retaining the copyright
+and permission notice. Its README requests citation of the original repository.
+These sources were checked on 2026-09-27.
+
+The 120 historical and 481 held-out photographs are redistributed with the
+original copyright and full MIT text in `web/static/trashnet/THIRD_PARTY_NOTICE.txt`,
+linked from both pages alongside the original source. Photos uploaded for local
+classification are processed in memory and are not saved to the public gallery.
+
+## Trained classifier comparison (2026-09-27)
+
+The gallery now defaults to a separately trained SigLIP2 material classifier:
+**113/120 (94.2%)** on the historical photos versus Qwen's raw **95/120 (79.2%)**.
+The separately reserved test set scores **466/481 (96.9%)**. Choose **Independent
+test** to inspect its photos and all 15 errors. The historical L2S1 models remain
+selectable with their original scores and abstentions. This is a supervised
+classifier comparison, not an improvement to the L2S1 GGUF models themselves.
+
+See [the reproducible training and evaluation report](../benchmarks/trashnet-trained-20260927/README.md)
+for split isolation, model selection, class counts, serving measurements and
+commands to enable new-photo classification. The local classifier listens on
+127.0.0.1:8766 and is proxied by the dev server; photos are processed on this
+computer. Static hosting supports recorded comparisons without that server.
+
+Detect adds a selectable **OWL-ViT waste-vocabulary experiment** with actual
+CPU recordings. Its browser execution did not pass verification and is disabled. It still has false detections and does
+not establish a localization accuracy improvement. Whole-image trained material
+results appear in a separate panel, not as replacement labels on detector boxes.
+
+The following section describes the preserved original baselines.
+
 Run the existing web app:
 
 ```sh

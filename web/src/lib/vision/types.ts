@@ -1,10 +1,12 @@
 export type Sample = { name: string; label: string; sha256: string; image_url: string };
-export type Observation = { image: string; ground_truth: string; selected: string | null; raw_top1: string; candidate_mass: number; top_option_probability: number; abstention_reasons: string[]; latency_ms: number; scores: { id: string; option_probability: number }[] };
+export type Observation = { image: string; ground_truth: string; selected: string | null; raw_top1: string; candidate_mass: number | null; top_option_probability: number; abstention_reasons: string[]; latency_ms: number | null; scores: { id: string; option_probability: number }[] };
+export type GalleryModel = { id: string; name: string; observations: Record<string, Observation>; runtime?: string; recorded_at?: string; supervised?: boolean };
+export type Improvement = { model: GalleryModel; test_records: Sample[]; report: { classifier: string; split_counts: Record<string, number>; evaluations: Record<string, { correct: number; total: number; accuracy: number; balanced_accuracy: number; confusion_matrix: number[][] }> }; };
 export type Gallery = {
   recorded_at: string; runtime: string; prompt: string;
   policy: { min_top_probability: number; min_candidate_mass: number };
   source: { source_commit: string; classes: string[]; records: Sample[] };
-  models: { id: string; name: string; observations: Record<string, Observation> }[];
+  models: GalleryModel[];
 };
 export type Detection = { label: string; score: number; box: { xmin: number; ymin: number; xmax: number; ymax: number } };
 export type DetectionSample = Sample & { width: number; height: number; elapsed_ms: number; detections: Detection[] };
