@@ -65,3 +65,6 @@ The stable `sd_*` ABI remains available to Rust callers. The former
 possibly dirty KV state. Bindings and Rust implementation sources participate
 in the runtime fingerprint. This is not a Rust reimplementation of llama.cpp.
 See the [C++ application SDK](../../sdks/cpp/README.md) for typed resident-process use.
+
+See [migration validation](../../docs/RUST_BRIDGE_MIGRATION.md) for the exact
+C++/Rust comparison scope and opt-in reproduction commands.

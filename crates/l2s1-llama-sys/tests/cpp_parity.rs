@@ -247,3 +247,146 @@ fn rust_matches_previous_cpp_bridge() {
         close(cpp);
     }
 }
+
+#[test]
+#[ignore = "requires L2S1_CPP_REFERENCE, SKID_VISION_MODEL, SKID_VISION_MMPROJ, L2S1_VISION_IMAGE"]
+fn rust_vision_matches_previous_cpp_bridge() {
+    unsafe {
+        let path = CString::new(std::env::var("L2S1_CPP_REFERENCE").unwrap()).unwrap();
+        let library = Library(libc::dlopen(
+            path.as_ptr(),
+            libc::RTLD_NOW | libc::RTLD_LOCAL,
+        ));
+        assert!(!library.0.is_null());
+        type Open = unsafe extern "C" fn(
+            *const c_char,
+            u32,
+            u32,
+            u32,
+            i32,
+            i32,
+            bool,
+            *mut c_char,
+            usize,
+        ) -> *mut c_void;
+        type Close = unsafe extern "C" fn(*mut c_void);
+        type Load = unsafe extern "C" fn(*mut c_void, *const c_char, *mut c_char, usize) -> bool;
+        type Reuse = unsafe extern "C" fn(*mut c_void, bool);
+        type Forward = unsafe extern "C" fn(
+            *mut c_void,
+            *const NativeVisionInput,
+            i32,
+            u32,
+            bool,
+            *mut f32,
+            usize,
+            *mut usize,
+            *mut c_char,
+            usize,
+        ) -> bool;
+        let open: Open = library.symbol(c"sd_open");
+        let close: Close = library.symbol(c"sd_close");
+        let load: Load = library.symbol(c"sd_load_vision_projector");
+        let reuse: Reuse = library.symbol(c"sd_set_vision_projector_reuse");
+        let forward: Forward = library.symbol(c"sd_forward_vision_parallel");
+        let model = CString::new(std::env::var("SKID_VISION_MODEL").unwrap()).unwrap();
+        let projector = CString::new(std::env::var("SKID_VISION_MMPROJ").unwrap()).unwrap();
+        let image = std::fs::read(std::env::var("L2S1_VISION_IMAGE").unwrap()).unwrap();
+        let mut error = [0; 1024];
+        let rust = sd_open(
+            model.as_ptr(),
+            2048,
+            256,
+            256,
+            0,
+            4,
+            false,
+            error.as_mut_ptr(),
+            error.len(),
+        );
+        let cpp = open(
+            model.as_ptr(),
+            2048,
+            256,
+            256,
+            0,
+            4,
+            false,
+            error.as_mut_ptr(),
+            error.len(),
+        );
+        assert!(!rust.is_null() && !cpp.is_null());
+        assert!(sd_load_vision_projector(
+            rust,
+            projector.as_ptr(),
+            error.as_mut_ptr(),
+            error.len()
+        ));
+        assert!(load(
+            cpp,
+            projector.as_ptr(),
+            error.as_mut_ptr(),
+            error.len()
+        ));
+        let make_input = || NativeVisionInput {
+            prefix: c"Describe the image. ".as_ptr(),
+            prefix_len: 20,
+            data_before: c"".as_ptr(),
+            before_len: 0,
+            image: image.as_ptr(),
+            image_len: image.len(),
+            data_after: c"".as_ptr(),
+            after_len: 0,
+            suffix: c" Answer: ".as_ptr(),
+            suffix_len: 9,
+        };
+        let inputs = [make_input(), make_input()];
+        let vocab = sd_vocab_size(rust) as usize;
+        for enabled in [false, true] {
+            sd_set_vision_projector_reuse(rust, enabled);
+            reuse(cpp, enabled);
+            let mut a = vec![0.0; vocab * 2];
+            let mut b = a.clone();
+            let (mut at, mut bt) = ([0; 2], [0; 2]);
+            assert!(
+                sd_forward_vision_parallel(
+                    rust,
+                    inputs.as_ptr(),
+                    2,
+                    2,
+                    true,
+                    a.as_mut_ptr(),
+                    a.len(),
+                    at.as_mut_ptr(),
+                    error.as_mut_ptr(),
+                    error.len()
+                ),
+                "{}",
+                CStr::from_ptr(error.as_ptr()).to_string_lossy()
+            );
+            assert!(
+                forward(
+                    cpp,
+                    inputs.as_ptr(),
+                    2,
+                    2,
+                    true,
+                    b.as_mut_ptr(),
+                    b.len(),
+                    bt.as_mut_ptr(),
+                    error.as_mut_ptr(),
+                    error.len()
+                ),
+                "{}",
+                CStr::from_ptr(error.as_ptr()).to_string_lossy()
+            );
+            assert_eq!(at, bt);
+            assert_eq!(
+                a, b,
+                "vision vocabulary differs (projector reuse={enabled})"
+            );
+        }
+        sd_close(rust);
+        close(cpp);
+    }
+}

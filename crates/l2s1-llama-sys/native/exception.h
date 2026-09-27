@@ -24,4 +24,13 @@ int32_t sd_native_mtmd_helper_eval_chunks(mtmd_context * ctx, llama_context * lc
 mtmd_batch * sd_native_mtmd_batch_init(mtmd_context * ctx) noexcept;
 int32_t sd_native_mtmd_batch_add_chunk(mtmd_batch * batch, const mtmd_input_chunk * chunk) noexcept;
 int32_t sd_native_mtmd_batch_encode(mtmd_batch * batch) noexcept;
+void sd_native_ggml_backend_load_all() noexcept;
+void sd_native_llama_backend_init() noexcept;
+void sd_native_llama_memory_clear(llama_memory_t memory, bool data) noexcept;
+bool sd_native_llama_memory_seq_rm(llama_memory_t memory, llama_seq_id seq, llama_pos start, llama_pos end) noexcept;
+void sd_native_llama_memory_seq_cp(llama_memory_t memory, llama_seq_id src, llama_seq_id dst, llama_pos start, llama_pos end) noexcept;
+int32_t sd_native_llama_model_meta_val_str(const llama_model * model, const char * key, char * out, size_t size) noexcept;
+int32_t sd_native_llama_model_desc(const llama_model * model, char * out, size_t size) noexcept;
+const char * sd_native_llama_model_chat_template(const llama_model * model, const char * name) noexcept;
+int32_t sd_native_llama_token_to_piece(const llama_vocab * vocab, llama_token token, char * out, int32_t size, int32_t lstrip, bool special) noexcept;
 }

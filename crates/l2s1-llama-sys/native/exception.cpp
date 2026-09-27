@@ -66,3 +66,30 @@ extern "C" int32_t sd_native_mtmd_batch_add_chunk(mtmd_batch * batch, const mtmd
 extern "C" int32_t sd_native_mtmd_batch_encode(mtmd_batch * batch) noexcept {
     try { return mtmd_batch_encode(batch); } L2S1_CATCH(-1)
 }
+extern "C" void sd_native_ggml_backend_load_all() noexcept {
+    try { return ggml_backend_load_all(); } L2S1_CATCH()
+}
+extern "C" void sd_native_llama_backend_init() noexcept {
+    try { return llama_backend_init(); } L2S1_CATCH()
+}
+extern "C" void sd_native_llama_memory_clear(llama_memory_t memory, bool data) noexcept {
+    try { return llama_memory_clear(memory, data); } L2S1_CATCH()
+}
+extern "C" bool sd_native_llama_memory_seq_rm(llama_memory_t memory, llama_seq_id seq, llama_pos start, llama_pos end) noexcept {
+    try { return llama_memory_seq_rm(memory, seq, start, end); } L2S1_CATCH(false)
+}
+extern "C" void sd_native_llama_memory_seq_cp(llama_memory_t memory, llama_seq_id src, llama_seq_id dst, llama_pos start, llama_pos end) noexcept {
+    try { return llama_memory_seq_cp(memory, src, dst, start, end); } L2S1_CATCH()
+}
+extern "C" int32_t sd_native_llama_model_meta_val_str(const llama_model * model, const char * key, char * out, size_t size) noexcept {
+    try { return llama_model_meta_val_str(model, key, out, size); } L2S1_CATCH(-1)
+}
+extern "C" int32_t sd_native_llama_model_desc(const llama_model * model, char * out, size_t size) noexcept {
+    try { return llama_model_desc(model, out, size); } L2S1_CATCH(-1)
+}
+extern "C" const char * sd_native_llama_model_chat_template(const llama_model * model, const char * name) noexcept {
+    try { return llama_model_chat_template(model, name); } L2S1_CATCH(nullptr)
+}
+extern "C" int32_t sd_native_llama_token_to_piece(const llama_vocab * vocab, llama_token token, char * out, int32_t size, int32_t lstrip, bool special) noexcept {
+    try { return llama_token_to_piece(vocab, token, out, size, lstrip, special); } L2S1_CATCH(INT32_MIN)
+}

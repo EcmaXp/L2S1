@@ -14,7 +14,7 @@ use crate::raw::*;
 use std::{
     ffi::{CStr, CString, c_char, c_void},
     ptr,
-    sync::{Mutex, Once},
+    sync::{Mutex, OnceLock},
 };
 
 pub(crate) type Result<T> = std::result::Result<T, String>;
@@ -223,15 +223,17 @@ pub unsafe extern "C" fn sd_open_loading(
             return Err("invalid CPU/GPU placement options".into());
         }
         if model_load_mode != -1 && model_load_mode != 0 { return Err("invalid model loading mode".into()); }
-        static INIT: Once = Once::new();
-        INIT.call_once(|| {
+        static INIT: OnceLock<Result<()>> = OnceLock::new();
+        if let Err(cause) = INIT.get_or_init(|| {
             LOG.lock().unwrap_or_else(|p| p.into_inner()).threshold = match std::env::var("L2S1_LOG").as_deref() {
                 Ok("off" | "none") => 6, Ok("error") => 4, Ok("info") => 2, Ok("debug") => 1, _ => 3,
             };
             llama_log_set(Some(log_callback), ptr::null_mut());
             mtmd_helper_log_set(Some(log_callback), ptr::null_mut());
             ggml_backend_load_all(); llama_backend_init();
-        });
+            let error = CStr::from_ptr(sd_native_error());
+            if error.to_bytes().is_empty() { Ok(()) } else { Err(error.to_string_lossy().into_owned()) }
+        }) { return Err(cause.clone()); }
         // Allocate before giving native code pointers into the device array.
         let mut e = Box::new(Engine {
             model: ptr::null_mut(), ctx: ptr::null_mut(), adapter: ptr::null_mut(), vision: ptr::null_mut(), devices: [ptr::null_mut(); 2],
@@ -290,6 +292,8 @@ pub unsafe extern "C" fn sd_open_loading(
         e.batch_size = llama_n_batch(e.ctx);
         let mut desc = [0; 512]; llama_model_desc(e.model, desc.as_mut_ptr(), desc.len());
         e.description = CStr::from_ptr(desc.as_ptr()).to_owned(); e.runtime_libraries = runtime_libraries();
+        let native_error = CStr::from_ptr(sd_native_error());
+        if !native_error.to_bytes().is_empty() { return Err(native_error.to_string_lossy().into_owned()); }
         Ok(Box::into_raw(e))
     }).unwrap_or(ptr::null_mut())
 }

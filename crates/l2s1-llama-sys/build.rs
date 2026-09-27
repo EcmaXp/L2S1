@@ -300,6 +300,35 @@ fn main() {
     bindings = bindings
         .blocklist_function("^mtmd_batch_encode$")
         .raw_line("pub use self::sd_native_mtmd_batch_encode as mtmd_batch_encode;");
+    bindings = bindings
+        .blocklist_function("^ggml_backend_load_all$")
+        .raw_line("pub use self::sd_native_ggml_backend_load_all as ggml_backend_load_all;");
+    bindings = bindings
+        .blocklist_function("^llama_backend_init$")
+        .raw_line("pub use self::sd_native_llama_backend_init as llama_backend_init;");
+    bindings = bindings
+        .blocklist_function("^llama_memory_clear$")
+        .raw_line("pub use self::sd_native_llama_memory_clear as llama_memory_clear;");
+    bindings = bindings
+        .blocklist_function("^llama_memory_seq_rm$")
+        .raw_line("pub use self::sd_native_llama_memory_seq_rm as llama_memory_seq_rm;");
+    bindings = bindings
+        .blocklist_function("^llama_memory_seq_cp$")
+        .raw_line("pub use self::sd_native_llama_memory_seq_cp as llama_memory_seq_cp;");
+    bindings = bindings
+        .blocklist_function("^llama_model_meta_val_str$")
+        .raw_line("pub use self::sd_native_llama_model_meta_val_str as llama_model_meta_val_str;");
+    bindings = bindings
+        .blocklist_function("^llama_model_desc$")
+        .raw_line("pub use self::sd_native_llama_model_desc as llama_model_desc;");
+    bindings = bindings
+        .blocklist_function("^llama_model_chat_template$")
+        .raw_line(
+            "pub use self::sd_native_llama_model_chat_template as llama_model_chat_template;",
+        );
+    bindings = bindings
+        .blocklist_function("^llama_token_to_piece$")
+        .raw_line("pub use self::sd_native_llama_token_to_piece as llama_token_to_piece;");
     bindings
         .generate()
         .expect("generate matching llama.cpp bindings")
