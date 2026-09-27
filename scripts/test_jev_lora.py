@@ -86,6 +86,10 @@ class JevContractTests(unittest.TestCase):
             self.assertEqual({r['model'] for r in rows}, set(json.loads(DEFAULT_PROFILES.read_text())['models']))
             self.assertTrue(all(r['status'] == 'failed' and r['error'] for r in rows))
 
+    def test_legacy_registry_matches_packaged_registry(self):
+        self.assertEqual(json.loads(Path(__file__).with_name('jev_model_profiles.json').read_text()),
+                         json.loads(DEFAULT_PROFILES.read_text()))
+
     def test_model_profiles_pin_revision_and_reject_unknown_model(self):
         for name in ('smollm2', 'qwen3', 'gemma3', 'tinyllama', 'gemma4'):
             self.assertEqual(len(read_profile(name)['revision']), 40)

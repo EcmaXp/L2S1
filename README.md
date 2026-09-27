@@ -343,7 +343,7 @@ resident HTTP backend's decisions. See [agent setup](docs/en/AGENT_INTEGRATION.m
 | Model identity, preflight, calibration, worker ownership | [Model interchangeability](docs/en/MODEL_INTERCHANGEABILITY.md) |
 | Model-specific test commands | [Verification](docs/en/VERIFICATION.md) |
 | Prefix reuse and parallel execution | [Prefix algorithm](docs/en/SEMIF_ALGORITHM.md), [parallel execution](docs/en/PARALLEL_EXECUTION.md) |
-| Learned specialization | [LoRA training](docs/en/DECISION_FINETUNE.md), [output heads](docs/en/OUTPUT_HEAD.md), [Jev-type model matrix](docs/JEV_LORA.md) |
+| Learned specialization | [LoRA training](docs/en/DECISION_FINETUNE.md), [output heads](docs/en/OUTPUT_HEAD.md), [Jev-type training CLI](docs/JEV_LORA.md) (`pip install ./training`; `l2s1-train`) |
 | Dataset preparation and report tools | [l2s1-tools](docs/en/crates/l2s1-tools/README.md) |
 | Recorded model comparisons and their limits | [Model results](docs/en/MODEL_RESULTS.md) |
 

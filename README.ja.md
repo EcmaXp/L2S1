@@ -339,7 +339,7 @@ AI エージェントには、環境をまたいで利用できる [L2S1 スキ�
 | モデル識別、事前検証、校正、ワーカーの所有権 | [モデルの交換](docs/ja/MODEL_INTERCHANGEABILITY.md) |
 | モデル別のテストコマンド | [検証](docs/ja/VERIFICATION.md) |
 | プレフィックス再利用と並列実行 | [プレフィックスアルゴリズム](docs/ja/SEMIF_ALGORITHM.md)、[並列実行](docs/ja/PARALLEL_EXECUTION.md) |
-| 学習による特化 | [LoRA 学習](docs/ja/DECISION_FINETUNE.md)、[出力ヘッド](docs/ja/OUTPUT_HEAD.md), [Jev 型の共通チューニング](docs/JEV_LORA.md) |
+| 学習による特化 | [LoRA 学習](docs/ja/DECISION_FINETUNE.md)、[出力ヘッド](docs/ja/OUTPUT_HEAD.md), [Jev 型学習 CLI](docs/JEV_LORA.md) (`pip install ./training`; `l2s1-train`) |
 | データセットの準備とレポートツール | [l2s1-tools](docs/ja/crates/l2s1-tools/README.md) |
 | 記録されたモデル比較とその限界 | [モデルの測定結果](docs/ja/MODEL_RESULTS.md) |
 

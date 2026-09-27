@@ -345,7 +345,7 @@ MCP에서 문서 조회, 요청 형식 검증, 상주 HTTP 백엔드의 추론�
 | 모델 식별 정보, 사전 검증, 보정, worker 소유권 | [모델 교체와 계약](docs/ko/MODEL_INTERCHANGEABILITY.md) |
 | 모델별 테스트 명령 | [검증 안내](docs/ko/VERIFICATION.md) |
 | 접두사 재사용과 병렬 실행 | [접두사 알고리즘](docs/ko/SEMIF_ALGORITHM.md), [병렬 실행](docs/ko/PARALLEL_EXECUTION.md) |
-| 학습을 통한 특화 | [LoRA 학습](docs/ko/DECISION_FINETUNE.md), [출력 헤드](docs/ko/OUTPUT_HEAD.md), [Jev 타입 공통 튜닝](docs/JEV_LORA.md) |
+| 학습을 통한 특화 | [LoRA 학습](docs/ko/DECISION_FINETUNE.md), [출력 헤드](docs/ko/OUTPUT_HEAD.md), [Jev 타입 학습 CLI](docs/JEV_LORA.md) (`pip install ./training`; `l2s1-train`) |
 | 데이터 준비와 보고서 도구 | [l2s1-tools](docs/ko/crates/l2s1-tools/README.md) |
 | 모델 비교 기록과 측정 한계 | [모델 결과](docs/ko/MODEL_RESULTS.md) |
 
