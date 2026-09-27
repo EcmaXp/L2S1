@@ -17,7 +17,7 @@ The pure Rust library supports validation, scoring, scalar calibration and worke
 cargo test --locked
 ```
 
-The inference backend and CLI support Linux (CPU or CUDA) and macOS (CPU or Metal). They require Rust with edition 2024 support, CMake, and a C++17 compiler. Metal builds require an Xcode toolchain with the Metal compiler. The `l2s1-llama-sys` workspace dependency builds llama.cpp and the matching native bridge together.
+The inference backend and CLI support Linux (CPU or CUDA) and macOS (CPU or Metal). They require Rust with edition 2024 support, CMake, a C++17 compiler, and Clang/libclang for generating matching Rust ABI bindings. Metal builds require an Xcode toolchain with the Metal compiler. The `l2s1-llama-sys` workspace dependency builds llama.cpp and the matching native bridge together.
 
 ```sh
 cargo build --release --locked --features llama

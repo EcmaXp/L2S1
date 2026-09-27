@@ -69,6 +69,7 @@ jobs:
           python-version: '3.14'
       - uses: dtolnay/rust-toolchain@stable
       - run: |
+          sudo apt-get update && sudo apt-get install -y libclang-dev
           python scripts/prepare_cargo_release.py --output "$RUNNER_TEMP/cargo-source"
           cargo package --manifest-path "$RUNNER_TEMP/cargo-source/Cargo.toml" -p l2s1-llama-sys -p l2s1 --features llama
           tar --exclude=target -czf "$RUNNER_TEMP/cargo-source.tar.gz" -C "$RUNNER_TEMP/cargo-source" .

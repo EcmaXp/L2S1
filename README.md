@@ -1,5 +1,7 @@
 # L2S1 — LLM to System 1
 
+
+C++17 applications can use the [C++ SDK](sdks/cpp/README.md) for a resident Rust process, typed decisions and native batch calls.
 **Turn local GGUF model scores into typed decisions.**
 
 English · [한국어](README.ko.md) · [日本語](README.ja.md) · [Documentation](docs/en/README.md) · [Model results](docs/en/MODEL_RESULTS.md)

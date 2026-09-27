@@ -62,8 +62,10 @@ fn main() {
         );
     }
     for file in [
-        "native/bridge.cpp",
+        "src",
         "native/chat.cpp",
+        "native/exception.h",
+        "native/exception.cpp",
         "cmake/CMakeLists.txt",
         "UPSTREAM_COMMIT",
         "build.rs",
@@ -231,6 +233,108 @@ fn main() {
         );
     }
 
+    // Generate layouts and C/C++ symbol names from the exact linked revision.
+    let mut bindings = bindgen::Builder::default()
+        .header_contents("l2s1.h", "#include \"llama.h\"\n#include \"llama-ext.h\"\n#include \"ggml-backend.h\"\n#include \"mtmd.h\"\n#include \"mtmd-helper.h\"\n")
+        .clang_args(["-x", "c++", "-std=c++17"])
+        .header(manifest.join("native/exception.h").to_string_lossy())
+        .allowlist_function("(llama|ggml_backend|mtmd|sd_native)_.*")
+        .allowlist_var("(LLAMA|GGML|MTMD)_.*")
+        .opaque_type("std::.*")
+        .layout_tests(false)
+        .generate_comments(false);
+    for directory in ["include", "ggml/include", "src", "tools/mtmd"] {
+        bindings = bindings.clang_arg(format!("-I{}", source.join(directory).display()));
+    }
+    bindings = bindings
+        .blocklist_function("^llama_model_load_from_file$")
+        .raw_line(
+            "pub use self::sd_native_llama_model_load_from_file as llama_model_load_from_file;",
+        );
+    bindings = bindings
+        .blocklist_function("^llama_init_from_model$")
+        .raw_line("pub use self::sd_native_llama_init_from_model as llama_init_from_model;");
+    bindings = bindings
+        .blocklist_function("^llama_adapter_lora_init$")
+        .raw_line("pub use self::sd_native_llama_adapter_lora_init as llama_adapter_lora_init;");
+    bindings = bindings
+        .blocklist_function("^llama_set_adapters_lora$")
+        .raw_line("pub use self::sd_native_llama_set_adapters_lora as llama_set_adapters_lora;");
+    bindings = bindings
+        .blocklist_function("^llama_batch_init$")
+        .raw_line("pub use self::sd_native_llama_batch_init as llama_batch_init;");
+    bindings = bindings
+        .blocklist_function("^llama_decode$")
+        .raw_line("pub use self::sd_native_llama_decode as llama_decode;");
+    bindings = bindings
+        .blocklist_function("^llama_tokenize$")
+        .raw_line("pub use self::sd_native_llama_tokenize as llama_tokenize;");
+    bindings = bindings
+        .blocklist_function("^llama_state_seq_get_size$")
+        .raw_line("pub use self::sd_native_llama_state_seq_get_size as llama_state_seq_get_size;");
+    bindings = bindings
+        .blocklist_function("^llama_state_seq_get_data$")
+        .raw_line("pub use self::sd_native_llama_state_seq_get_data as llama_state_seq_get_data;");
+    bindings = bindings
+        .blocklist_function("^llama_state_seq_set_data$")
+        .raw_line("pub use self::sd_native_llama_state_seq_set_data as llama_state_seq_set_data;");
+    bindings = bindings
+        .blocklist_function("^mtmd_init_from_file$")
+        .raw_line("pub use self::sd_native_mtmd_init_from_file as mtmd_init_from_file;");
+    bindings = bindings
+        .blocklist_function("^mtmd_input_chunks_init$")
+        .raw_line("pub use self::sd_native_mtmd_input_chunks_init as mtmd_input_chunks_init;");
+    bindings = bindings.blocklist_function("^mtmd_helper_bitmap_init_from_buf$").raw_line("pub use self::sd_native_mtmd_helper_bitmap_init_from_buf as mtmd_helper_bitmap_init_from_buf;");
+    bindings = bindings
+        .blocklist_function("^mtmd_tokenize_from_parts$")
+        .raw_line("pub use self::sd_native_mtmd_tokenize_from_parts as mtmd_tokenize_from_parts;");
+    bindings = bindings
+        .blocklist_function("^mtmd_helper_eval_chunks$")
+        .raw_line("pub use self::sd_native_mtmd_helper_eval_chunks as mtmd_helper_eval_chunks;");
+    bindings = bindings
+        .blocklist_function("^mtmd_batch_init$")
+        .raw_line("pub use self::sd_native_mtmd_batch_init as mtmd_batch_init;");
+    bindings = bindings
+        .blocklist_function("^mtmd_batch_add_chunk$")
+        .raw_line("pub use self::sd_native_mtmd_batch_add_chunk as mtmd_batch_add_chunk;");
+    bindings = bindings
+        .blocklist_function("^mtmd_batch_encode$")
+        .raw_line("pub use self::sd_native_mtmd_batch_encode as mtmd_batch_encode;");
+    bindings = bindings
+        .blocklist_function("^ggml_backend_load_all$")
+        .raw_line("pub use self::sd_native_ggml_backend_load_all as ggml_backend_load_all;");
+    bindings = bindings
+        .blocklist_function("^llama_backend_init$")
+        .raw_line("pub use self::sd_native_llama_backend_init as llama_backend_init;");
+    bindings = bindings
+        .blocklist_function("^llama_memory_clear$")
+        .raw_line("pub use self::sd_native_llama_memory_clear as llama_memory_clear;");
+    bindings = bindings
+        .blocklist_function("^llama_memory_seq_rm$")
+        .raw_line("pub use self::sd_native_llama_memory_seq_rm as llama_memory_seq_rm;");
+    bindings = bindings
+        .blocklist_function("^llama_memory_seq_cp$")
+        .raw_line("pub use self::sd_native_llama_memory_seq_cp as llama_memory_seq_cp;");
+    bindings = bindings
+        .blocklist_function("^llama_model_meta_val_str$")
+        .raw_line("pub use self::sd_native_llama_model_meta_val_str as llama_model_meta_val_str;");
+    bindings = bindings
+        .blocklist_function("^llama_model_desc$")
+        .raw_line("pub use self::sd_native_llama_model_desc as llama_model_desc;");
+    bindings = bindings
+        .blocklist_function("^llama_model_chat_template$")
+        .raw_line(
+            "pub use self::sd_native_llama_model_chat_template as llama_model_chat_template;",
+        );
+    bindings = bindings
+        .blocklist_function("^llama_token_to_piece$")
+        .raw_line("pub use self::sd_native_llama_token_to_piece as llama_token_to_piece;");
+    bindings
+        .generate()
+        .expect("generate matching llama.cpp bindings")
+        .write_to_file(out_dir.join("bindings.rs"))
+        .expect("write bindings");
+
     let mut bridge = cc::Build::new();
     bridge
         .cpp(true)
@@ -241,8 +345,8 @@ fn main() {
         .include(source.join("src"))
         .include(source.join("tools/mtmd"))
         .include(source.join("vendor"))
-        .file(manifest.join("native/bridge.cpp"))
-        .file(manifest.join("native/chat.cpp"));
+        .file(manifest.join("native/chat.cpp"))
+        .file(manifest.join("native/exception.cpp"));
     for file in JINJA_FILES {
         bridge.file(source.join("common").join(file));
     }
@@ -262,8 +366,18 @@ fn main() {
     for file in JINJA_FILES {
         digest_file(&mut fingerprint, &source.join("common").join(file));
     }
-    digest_file(&mut fingerprint, &manifest.join("native/bridge.cpp"));
+    for file in [
+        "src/lib.rs",
+        "src/bridge.rs",
+        "src/text.rs",
+        "src/vision.rs",
+    ] {
+        digest_file(&mut fingerprint, &manifest.join(file));
+    }
+    digest_file(&mut fingerprint, &out_dir.join("bindings.rs"));
     digest_file(&mut fingerprint, &manifest.join("native/chat.cpp"));
+    digest_file(&mut fingerprint, &manifest.join("native/exception.h"));
+    digest_file(&mut fingerprint, &manifest.join("native/exception.cpp"));
     let archive = out_dir.join(
         if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
             "l2s1_bridge.lib"
@@ -301,4 +415,8 @@ fn main() {
     println!("cargo:rustc-link-lib=dylib=mtmd");
     println!("cargo:rustc-link-lib=dylib=ggml");
     println!("cargo:rustc-link-lib=dylib=ggml-base");
+    // Make this crate's own native tests runnable without a loader override.
+    if target_os == "linux" || target_os == "macos" {
+        println!("cargo:rustc-link-arg=-Wl,-rpath,{}", runtime_lib.display());
+    }
 }

@@ -1,5 +1,7 @@
 # L2S1 — LLM to System 1
 
+
+C++17에서는 [C++ SDK](sdks/cpp/README.md)로 Rust 프로세스를 유지하면서 타입이 있는 결정과 네이티브 배치 호출을 사용할 수 있습니다.
 **로컬 GGUF 모델의 점수를 타입이 있는 판단으로 바꿉니다.**
 
 [English](README.md) · 한국어 · [日本語](README.ja.md) · [문서 색인](docs/ko/README.md) · [모델 측정 결과](docs/ko/MODEL_RESULTS.md)
