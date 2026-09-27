@@ -49,6 +49,31 @@ node web/scripts/verify-decision-rules.mjs
 ```
 
 
+<a id="recorded-apple-m5-max-results"></a>
+## macOS / Apple M5 Max 측정 결과
+
+**2026-09-27 04:33:25 UTC**(13:33:25 KST)에 **Apple M5 Max**(통합 메모리 128 GB, macOS 27.0)에서 측정했습니다. AC 전원에 연결한 고성능 모드였습니다. 설정은 위의 Windows 측정과 같습니다: `legacy`, `fresh`, 컨텍스트 2048, 배치 256, 스레드 4, 임계값 0.8 / 0.05, 측정 3회, 워밍업 1회, 타임아웃 1800초. Metal 실행에는 이 저장소 리비전의 `--device cpu metal`을 사용했습니다. Gemma 4 26B-A4B Q4_K_M은 사용자 지정 manifest로 여섯 번째 체크포인트로 실행했습니다.
+
+| Model | Device | Status | Coverage | Accepted accuracy | Correct / all | Raw top-1 | p50 ms/request | p95 ms/request | Decisions/s | Correct accepted/s |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| smollm2 | cpu | ok | 8.3% | 33.3% | 2.8% | 38.9% | 153.3 | 167.7 | 19.58 | 0.54 |
+| smollm2 | metal | ok | 13.9% | 40.0% | 5.6% | 38.9% | 21.8 | 23.2 | 137.29 | 7.63 |
+| qwen3 | cpu | ok | 83.3% | 33.3% | 27.8% | 41.7% | 474.3 | 522.1 | 6.26 | 1.74 |
+| qwen3 | metal | ok | 83.3% | 33.3% | 27.8% | 36.1% | 42.9 | 43.7 | 69.99 | 19.44 |
+| gemma3 | cpu | ok | 91.7% | 54.5% | 50.0% | 50.0% | 610.4 | 679.0 | 4.83 | 2.42 |
+| gemma3 | metal | ok | 88.9% | 53.1% | 47.2% | 50.0% | 55.6 | 60.7 | 52.82 | 24.94 |
+| tinyllama | cpu | ok | 0.0% | n/a | 0.0% | 38.9% | 1399.0 | 1556.7 | 2.13 | 0.00 |
+| tinyllama | metal | ok | 0.0% | n/a | 0.0% | 38.9% | 59.6 | 60.7 | 50.23 | 0.00 |
+| gemma4 | cpu | ok | 94.4% | 100.0% | 94.4% | 97.2% | 1784.4 | 2377.2 | 1.65 | 1.56 |
+| gemma4 | metal | ok | 94.4% | 97.1% | 91.7% | 94.4% | 203.8 | 246.4 | 14.68 | 13.46 |
+| gemma4-26b-a4b | cpu | ok | 100.0% | 100.0% | 100.0% | 100.0% | 5837.7 | 6489.0 | 0.52 | 0.52 |
+| gemma4-26b-a4b | metal | ok | 100.0% | 100.0% | 100.0% | 100.0% | 506.0 | 647.7 | 5.75 | 5.75 |
+
+Gemma 4 26B-A4B는 두 장치 모두 모든 회차에서 36개 판단을 전부 맞혔습니다(Metal p50 506.0 ms). Gemma 4 E2B는 두 장치 모두 회차마다 36개 중 34개를 수락했습니다. CPU는 34개를 모두 맞혔고, Metal은 33개를 맞히고 1개를 틀렸습니다. 모든 실행에서 반복 비교 72회 중 변경은 0회였지만, 일부 체크포인트는 CPU와 Metal 사이에 약간의 차이가 있습니다. 모든 Metal 리포트에는 `backend.offload_device: "Apple M5 Max"`가 기록되어 있습니다. 실행별 리포트와 로그는 로컬에만 보관하고 공개하지 않았습니다. 이 결과는 합성 fixture에 대한 근거이며, 일반적인 모델 품질을 나타내지 않습니다.
+
+[결과와 한계](../../benchmarks/decision-rules-macos-m5max-20260927/README.md) · [요약 JSON](../../benchmarks/decision-rules-macos-m5max-20260927/summary.json) · [출처와 하드웨어](../../benchmarks/decision-rules-macos-m5max-20260927/provenance.json)
+
+
 <a id="run-the-five-model-matrix"></a>
 ## 5개 모델 매트릭스 실행
 

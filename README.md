@@ -326,6 +326,7 @@ Parallel execution and the vision profile are supported features with a differen
 | Study | Recorded scope | Report |
 | --- | --- | --- |
 | decision-rules-v1 · RTX 5090 / Windows | 5 checkpoints × CPU/CUDA; 36 distinct synthetic decisions × 3 passes. Gemma4 CUDA: 94.3% accepted accuracy, 91.7% correct/all; CPU timeout retained | [Results and conditions](docs/en/BENCHMARK.md#recorded-windows-rtx-5090-results), [aggregate audit](benchmarks/decision-rules-windows-20260926/audit.json) |
+| decision-rules-v1 · Apple M5 Max / macOS | 5 checkpoints + Gemma4 26B-A4B × CPU/Metal; 36 distinct synthetic decisions × 3 passes. Gemma4 26B-A4B: 100% on both devices; Gemma4 E2B Metal: 97.1% accepted accuracy, 91.7% correct/all | [Results and conditions](docs/en/BENCHMARK.md#recorded-apple-m5-max-results), [summary JSON](benchmarks/decision-rules-macos-m5max-20260927/summary.json) |
 | decision-rules-v1 · Raspberry Pi 5 4GB | Gemma3 1B Q8 CPU: 55.6% raw accuracy, 54.5% accepted accuracy, 91.7% coverage; p50 4.766 s / three-decision request, peak RSS 2.10 GiB. Active undervoltage/throttling observed | [Physical-device results](benchmarks/pi5-gemma3-20260927/README.md) |
 | JevBench public subset | Original matrix: 22 checkpoints × 231 items; 5,082 valid predictions | [Model results](docs/en/MODEL_RESULTS.md), [method](docs/en/JEVBENCH.md) |
 | Intent classification | 77 English labels and 60 Korean labels; 200 examples per language per checkpoint | [Intent benchmark](docs/en/INTENT_BENCHMARK.md) |
