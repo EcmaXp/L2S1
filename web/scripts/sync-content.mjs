@@ -1,4 +1,7 @@
 import { mkdir, copyFile, readdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { loadDecisionRules, rulesStudy } from './verify-decision-rules.mjs';
+// Validate the declared user-supplied study before publishing generated content.
+const rules = await loadDecisionRules();
 const root = new URL('../../', import.meta.url);
 const target = new URL('../static/docs/', import.meta.url);
 const publicStudy = 'typed-decisions-20260926';
@@ -8,7 +11,11 @@ await mkdir(target, { recursive: true });
 for (const name of [
   'README.md', 'README.ko.md', 'README.ja.md', 'LICENSE', 'THIRD_PARTY_LICENSES.txt',
 ]) {
-  await copyFile(new URL(name, root), new URL(name, target));
+  if (name.endsWith('.md')) {
+    await writeFile(new URL(name, target), publicEvidenceLinks(await readFile(new URL(name, root), 'utf8')));
+  } else {
+    await copyFile(new URL(name, root), new URL(name, target));
+  }
 }
 
 // Mirror documentation paths so README language links and guide links resolve.
@@ -17,10 +24,14 @@ const documentTarget = new URL('docs/', target);
 await mkdir(documentTarget, { recursive: true });
 await copyFile(new URL('translations.json', documents), new URL('translations.json', documentTarget));
 function publicEvidenceLinks(markdown) {
-  for (const study of [publicStudy, 'rtx3060-20260926']) {
-    markdown = markdown.replace(new RegExp(`(?:\\.\\./)+benchmarks/${study}/([^\\s)]+\\.jsonl?)`, 'g'), `/benchmarks/${study}/$1`);
+  for (const study of [publicStudy, 'rtx3060-20260926', rulesStudy]) {
+    markdown = markdown.replace(new RegExp(`(?:\\.\\./)*benchmarks/${study}/([^\\s)]+\\.jsonl?)`, 'g'), `/benchmarks/${study}/$1`);
   }
   return markdown;
+}
+function rulesReportLinks(markdown) {
+  return markdown.replace(/\((summary|audit|provenance)\.json\)/g, `(/benchmarks/${rulesStudy}/$1.json)`)
+    .replace('(../../docs/BENCHMARK.md)', '(/docs/docs/en/BENCHMARK.md)');
 }
 for (const entry of await readdir(documents, { withFileTypes: true })) {
   if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
@@ -68,7 +79,11 @@ for (const entry of await readdir(benchmarks, { withFileTypes: true })) {
   for (const report of await readdir(source, { withFileTypes: true })) {
     if (!report.isFile() || !/^(README|REPORT)\.md$/.test(report.name)) continue;
     await mkdir(destination, { recursive: true });
-    await copyFile(new URL(report.name, source), new URL(report.name, destination));
+    if (entry.name === rulesStudy) {
+      await writeFile(new URL(report.name, destination), rulesReportLinks(await readFile(new URL(report.name, source), 'utf8')));
+    } else {
+      await copyFile(new URL(report.name, source), new URL(report.name, destination));
+    }
   }
 }
 await copyFile(new URL('examples/warehouse.json', root), new URL('warehouse.json', target));
@@ -133,3 +148,13 @@ for (const name of ['summary.json', 'manifest.json', 'README.md']) {
 const sharedTarget = new URL('../static/benchmarks/shared-state-cache-20260925/', import.meta.url);
 await mkdir(sharedTarget, { recursive: true });
 await copyFile(new URL('../src/lib/shared-state-highlight.json', import.meta.url), new URL('highlight.json', sharedTarget));
+
+// Aggregate-only Windows study; referenced per-run reports/logs were not supplied.
+const rulesTarget = new URL(`../static/benchmarks/${rulesStudy}/`, import.meta.url);
+await rm(rulesTarget, { recursive: true, force: true });
+await mkdir(rulesTarget, { recursive: true });
+for (const name of ['summary.json', 'provenance.json']) {
+  await copyFile(new URL(`benchmarks/${rulesStudy}/${name}`, root), new URL(name, rulesTarget));
+}
+await writeFile(new URL('README.md', rulesTarget), rulesReportLinks(await readFile(new URL(`benchmarks/${rulesStudy}/README.md`, root), 'utf8')));
+await writeFile(new URL('audit.json', rulesTarget), JSON.stringify(rules.audit, null, 2) + '\n');

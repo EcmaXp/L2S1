@@ -10,6 +10,8 @@ L2S1 は、ローカルのチャットモデルで二値・選択・順序付き
 
 [Python SDK](sdks/python/README.md)、[native batch](docs/ja/BATCHING_API_REVIEW.md)、[GitHub Release・npm・PyPI・Cargo 配布パイプライン](docs/ja/RELEASE_PIPELINE.md)を提供します。
 
+**RTX 5090 / Windows の測定:** Gemma 4 E2B Q8_0 は `decision-rules-v1` で **採用正解率94.3%**、**採用率97.2%**、**3判断のリクエストあたりp50 67.6 ms**を記録しました。全判断に対する採用正解は91.7%（各反復で正解33件・誤答2件・保留1件）です。合成ルール判断36件を3回反復し、読み込みとウォームアップは除外しました。[結果と測定条件](docs/ja/BENCHMARK.md#recorded-windows-rtx-5090-results) · [集計JSON](benchmarks/decision-rules-windows-20260926/summary.json)。
+
 ## インストール
 
 [v0.1.1](https://github.com/LuticaCANARD/L2S1/releases/tag/v0.1.1) を PyPI・npm・crates.io からインストールできます。
@@ -319,6 +321,7 @@ GPU での画像処理では、`--vision-optimized` により、4 つのデコ�
 
 | 評価 | 記録された範囲 | レポート |
 | --- | --- | --- |
+| decision-rules-v1 · RTX 5090 / Windows | 5チェックポイント × CPU/CUDA、合成判断36件 × 3回。Gemma4 CUDA: 採用正解率94.3%、全判断に対する採用正解91.7%。CPUタイムアウトも保持 | [結果と条件](docs/ja/BENCHMARK.md#recorded-windows-rtx-5090-results)、[集計検算](benchmarks/decision-rules-windows-20260926/audit.json) |
 | JevBench 公開サブセット | 元の測定表: 22 チェックポイント × 231 項目、5,082 件の有効な予測 | [モデルの測定結果](docs/ja/MODEL_RESULTS.md)、[手法](docs/ja/JEVBENCH.md) |
 | 意図分類 | 英語 77 ラベル、韓国語 60 ラベル。チェックポイントごとに各言語 200 例 | [意図分類ベンチマーク](docs/ja/INTENT_BENCHMARK.md) |
 | typed-decisions | テスト分割全体: モデルごとに 400 ケース / 2,000 判断。採用ポリシー適用前の正解率は Gemma 4 E2B が 54.30%、Qwen3 0.6B が 31.25% | [手順と結果](docs/ja/TYPED_DECISIONS_BENCHMARK.md) |

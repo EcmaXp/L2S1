@@ -51,6 +51,7 @@ for (const language of ['ko', 'ja'] as const) {
     await page.goto(`/?lang=${language}`);
     await expect(page).toHaveTitle(messages[language].metaTitle);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(messages[language].heroTitle);
+    await page.getByRole('button', { name: 'RTX 3080 · Warehouse / Typed-decisions', exact: true }).click();
     await expect(page.getByRole('link', { name: messages[language].gemmaSummary, exact: true })).toBeVisible();
     await page.getByRole('button', { name: messages[language].copyCommand, exact: true }).click();
     await expect(page.locator('.command-panel [role="status"]')).toHaveText(messages[language].clipboardError);
@@ -147,6 +148,7 @@ test('public typed-decision downloads preserve measured records and portable pro
   expect(manifest.runs['qwen3-06b'].command).toContain('--cuda');
   const report = await page.request.get('/docs/docs/TYPED_DECISIONS_BENCHMARK.md');
   expect(await report.text()).toContain('(/benchmarks/typed-decisions-20260926/gemma4-e2b-scored.jsonl)');
+  await page.getByRole('button', { name: 'RTX 3080 · Warehouse / Typed-decisions', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Gemma summary JSON', exact: true })).toBeVisible();
 });
 

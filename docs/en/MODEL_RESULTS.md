@@ -12,6 +12,8 @@ These are historical measurements at their recorded revisions and settings.
 They are not measurements of the current checkout or an official leaderboard.
 
 <a id="recorded-model-comparison"></a>
+For the separate Windows / RTX 5090 `decision-rules-v1` study, Gemma4 E2B Q8_0 recorded 94.3% accepted accuracy, 97.2% coverage, 91.7% correct/all and 67.6 ms p50 per three-decision request on 36 synthetic decisions repeated 3 times. [Full matrix and evidence](BENCHMARK.md#recorded-windows-rtx-5090-results). These figures belong to the rule fixture and do not replace the JevBench or typed-decisions results below.
+
 ## Recorded model comparison
 
 The September 23, 2026 JevBench matrix measured **22 GGUF checkpoints on all 231 public items** using the same frozen project build on an RTX 3060 12 GiB. All 5,082 predictions in the completed comparison runs were valid, with no inference errors or truncation. The 23 runtime configurations include one failed default GPT-OSS attempt and its successful CUDA Graphs-disabled recovery.
