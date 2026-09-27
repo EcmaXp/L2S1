@@ -206,3 +206,14 @@ contain source/tools only, never checkpoints or adapters. Historical pilot
 reports retain their original code hashes and results; packaging does not claim
 a new real-weight experiment. The pilot adapter remains opt-in because coverage
 and the rules regression declined.
+
+## Raspberry Pi inference
+
+[Physical Pi 5 4GB evidence](../benchmarks/pi5-gemma3-20260927/README.md) is available
+for **base Gemma3 1B Q8 CPU inference**, including Jev file rendering. Peak process
+RSS was 2.10 GiB with no swap used; the rules test's p50 was 4.766 seconds per
+three-decision request. Undervoltage/throttling occurred during the measurement.
+Raw accuracy was 55.6% and accepted accuracy 54.5%; this is not a validated
+Gemma3 adapter or a deployment-quality claim. The CUDA-only training runner still
+requires a separate GPU machine. The Pi installation uses the lightweight package
+for data/reporting and a separately built ARM64 CPU runtime for inference.
