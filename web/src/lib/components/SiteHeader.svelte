@@ -21,6 +21,8 @@
       <a href={resolve('/#how-it-works')}>{t('howItWorks')}</a>
       <a href={resolve('/webgpu')} aria-current={page.url.pathname === resolve('/webgpu') ? 'page' : undefined}>{t('webgpuDemo')}</a>
       <a href={resolve('/demo')} aria-current={page.url.pathname === resolve('/demo') ? 'page' : undefined}>{t('imageDemo')}</a>
+      <a href={resolve('/trashnet')} aria-current={page.url.pathname === resolve('/trashnet') ? 'page' : undefined}>TrashNet</a>
+      <a href={resolve('/detect')} aria-current={page.url.pathname === resolve('/detect') ? 'page' : undefined}>Detect</a>
       <a href={resolve('/#models')}>{t('models')}</a>
       <a href={resolve('/#performance')}>{t('performance')}</a>
     </nav>

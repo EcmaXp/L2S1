@@ -124,6 +124,7 @@
 <div class="shell" lang={$locale}>
   <main id="main">
     <div class="intro"><p class="eyebrow">{t('visionBadge')}</p><h1>{t('headline1')}<br /><em>{t('headline2')}</em></h1><p>{t('lead1')}<br /> {t('lead2')}</p></div>
+    <p class="hint"><a href={resolve('/trashnet')}>TrashNet · 120 images</a> · <a href={resolve('/detect')}>Detect · bounding boxes ↗</a></p>
     <div class="input-tabs" aria-label={t('inputType')}><button class:active={inputMode === 'photo'} aria-pressed={inputMode === 'photo'} onclick={() => changeInput('photo')} disabled={busy}>{t('photo')}</button><button class:active={inputMode === 'text'} aria-pressed={inputMode === 'text'} onclick={() => changeInput('text')} disabled={busy}>{t('text')}</button>{#if response}<a class="results-link" href="#output-heading">{t('results')}</a>{/if}</div><div class="workspace">
       <section class="input-panel" aria-labelledby="input-heading">
         <div class="panel-heading"><h2 id="input-heading">{t('inputHeading')}</h2><span>{t('inputBadge')}</span></div>

@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { messages } from '../src/lib/i18n/common';
 
-const destinations = ['/#how-it-works', '/webgpu', '/demo', '/#models', '/#performance'];
+const destinations = ['/#how-it-works', '/webgpu', '/demo', '/trashnet', '/detect', '/#models', '/#performance'];
 
 for (const language of ['ko', 'en', 'ja'] as const) {
   test(`${language} shares one accessible header and navigation across routes`, async ({ page }) => {
-    for (const route of ['/', '/demo', '/webgpu']) {
+    for (const route of ['/', '/demo', '/webgpu', '/trashnet', '/detect']) {
       await page.goto(`${route}?lang=${language}`);
       await expect(page.locator('#site-language')).toBeEnabled();
       const header = page.getByRole('banner');
@@ -45,7 +45,7 @@ test('mobile shared navigation opens home sections and demos while preserving pr
     await expect(page.locator('#site-theme')).toHaveValue('dark');
   }
 
-  for (const route of ['/demo', '/webgpu']) {
+  for (const route of ['/demo', '/webgpu', '/trashnet', '/detect']) {
     await page.getByRole('banner').locator(`a[href="${route}"]`).click();
     await expect(page).toHaveURL(new RegExp(`${route}$`));
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');

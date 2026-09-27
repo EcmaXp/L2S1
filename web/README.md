@@ -51,3 +51,7 @@ responses and benchmark values retain their original data.
 
 Translation catalogs live under `src/lib/i18n/`; `src/theme.css` supplies shared
 appearance tokens. Preview an explicit language with `/webgpu?lang=ja`.
+
+## TrashNet and Detect visual examples
+
+Open `/trashnet` for the 120-photo, three-model classification gallery, or `/detect` for bounding boxes and actual browser object detection on uploaded images. Twelve recorded detector examples work immediately. See [setup, provenance and validation](../docs/TRASHNET_DETECT_DEMO.md).
