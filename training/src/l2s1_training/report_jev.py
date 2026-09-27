@@ -73,7 +73,9 @@ def score_case(case, prediction):
             soft_kl=sum(v*math.log(v/max(pv[k], 1e-12)) for k, v in gv.items() if v > 0),
             soft_brier=sum((pv[k]-gv[k])**2 for k in ids))
         if a['type'] == 'score':
-            row['score_mae'] = abs(sum(int(k)*v for k,v in pv.items())-g['score'])
+            target_score = float(g['score']) if 'score' in g else sum(int(k)*v for k,v in gv.items())
+            require(math.isfinite(target_score) and 0 <= target_score <= len(ids)-1, 'Invalid gold Score expectation')
+            row['score_mae'] = abs(sum(int(k)*v for k,v in pv.items())-target_score)
         metrics.append(row)
     return dict(id=case['id'], model=response['backend']['model_description'], answers=answers,
                 l2s1_policy=dict(thresholds=response['policy'], decisions=policies),
@@ -124,14 +126,16 @@ def report(data, predictions, output):
     require(all(math.isfinite(t) and t > 0 for t in times), 'Invalid latency')
     output.mkdir(parents=True, exist_ok=False)
     jsonl(output/'jev-answers.jsonl', answers)
-    write_json(output/'summary.json', dict(schema_version=1, mode='specialist',
+    summary = dict(schema_version=1, mode='specialist',
         manifest_sha256=digest(data/'manifest.json'), predictions_sha256=digest(predictions),
         protocol=manifest['protocol'], overall=summarize(metrics, sum(planned_types.values())),
         by_type={k:summarize([r for r in metrics if r['type'] == k], n) for k,n in planned_types.items()},
         by_workflow={k:summarize([r for r in metrics if r['workflow'] == k], n) for k,n in planned_workflows.items()},
         failures=failures, latency_ms=dict(samples=len(times), p50=times[math.ceil(.5*len(times))-1] if times else None,
             p95=times[math.ceil(.95*len(times))-1] if times else None),
-        scope=manifest['scope']+' Failure decisions remain in accuracy/coverage denominators. Latency is per request; request sizes may vary. See evaluator command for load/warmup settings.'))
+        scope=manifest['scope']+' Failure decisions remain in accuracy/coverage denominators. Latency is per request; request sizes may vary. See evaluator command for load/warmup settings.')
+    write_json(output/'summary.json', summary)
+    return summary
 
 
 def main():
@@ -139,7 +143,8 @@ def main():
     for name in ('data', 'predictions', 'output'):
         p.add_argument('--'+name, type=Path, required=True)
     a = p.parse_args()
-    report(a.data, a.predictions, a.output)
+    if report(a.data, a.predictions, a.output)['failures']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

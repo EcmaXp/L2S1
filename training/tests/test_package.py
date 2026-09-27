@@ -31,6 +31,50 @@ class PackageTests(unittest.TestCase):
         prepare_custom(*paths, root/'data')
         return root/'data'
 
+    def test_custom_score_without_explicit_expectation_renders_all_types(self):
+        from l2s1_training.common import option_specs
+        from l2s1_training.prepare_jev_data import decision
+        from l2s1_training.report_jev import score_case
+        case = dict(id='mixed', workflow='custom', request=dict(state={}, decisions=[
+            decision('c', dict(type='choice', instructions='Pick', criteria={'a':'A','b':'B'})),
+            decision('n', dict(type='noul', instructions='True?')),
+            decision('s', dict(type='score', instructions='Level?', criteria=['Low','Mid','High'])),
+        ]), gold=dict(c=dict(type='choice', label='b', probabilities={'a':.2,'b':.8}),
+                      n=dict(type='noul', label='true', probabilities={'false':.1,'true':.9}),
+                      s=dict(type='score', label='2', probabilities={'0':.1,'1':.2,'2':.7})))
+        results = []
+        for d in case['request']['decisions']:
+            gold = case['gold'][d['id']]
+            value = dict(type='binary', value=True) if d['id']=='n' else dict(type=d['kind']['type'], selected=gold['label'])
+            results.append(dict(id=d['id'], value=value, candidate_mass=.95, input_tokens=12,
+                scores=[dict(id=o['id'], option_probability=gold['probabilities'][o['id']]) for o in option_specs(d)]))
+        prediction = dict(elapsed_ms=5, response=dict(results=results, backend=dict(model_description='fixture'), policy={}))
+        output, metrics = score_case(case, prediction)
+        self.assertEqual({a['type'] for a in output['answers'].values()}, {'choice','noul','score'})
+        self.assertAlmostEqual(metrics[-1]['score_mae'], 0)
+        # Preserve the explicit expectation used by historical typed-decisions data.
+        case['gold']['s']['score'] = 1.5
+        _, metrics = score_case(case, prediction)
+        self.assertAlmostEqual(metrics[-1]['score_mae'], .1)
+        case['gold']['s']['score'] = float('nan')
+        with self.assertRaisesRegex(ValueError, 'expectation'):
+            score_case(case, prediction)
+
+    def test_report_failure_exits_nonzero_and_preserves_denominator(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data = self.prepare(root)
+            predictions = root/'predictions.jsonl'
+            predictions.write_text('')
+            run = subprocess.run([sys.executable, '-m', 'l2s1_training', 'report',
+                '--data', str(data), '--predictions', str(predictions), '--output', str(root/'report')],
+                capture_output=True)
+            self.assertEqual(run.returncode, 1)
+            summary = json.loads((root/'report/summary.json').read_text(encoding='utf-8'))
+            self.assertEqual(summary['overall']['decisions'], 1)
+            self.assertEqual(summary['overall']['failed'], 1)
+            self.assertEqual(len(summary['failures']), 1)
+
     def test_custom_state_can_be_plain_text(self):
         case = row('text')
         case['state'] = 'A plain text state, not JSON-encoded parquet.'
